@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WW3</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #fff;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #c8a800, #f5d020, #c8a800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        #status {
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            min-height: 26px;
+            color: #f5d020;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #board-wrap {
+            display: inline-block;
+            border: 4px solid #c8a800;
+            border-radius: 4px;
+            box-shadow: 0 0 40px rgba(200,168,0,0.4), 0 0 80px rgba(200,168,0,0.1);
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 72px);
+            grid-template-rows: repeat(8, 72px);
+        }
+
+        .cell {
+            width: 72px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background 0.12s;
+        }
+
+        .light { background: #f0d9b5; }
+        .dark  { background: #b58863; }
+
+        .cell.selected   { background: #6ec66e !important; }
+        .cell.valid-move { background: #4da84d !important; cursor: pointer; }
+        .cell.can-select { cursor: pointer; }
+
+        .cell.valid-move::before {
+            content: '';
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.45);
+            border-radius: 50%;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .piece {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .piece.trump {
+            border: 3px solid #e8e8e8;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.3);
+            background: #ddd;
+        }
+
+        .piece.khamenei {
+            border: 3px solid #1a1a1a;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,255,255,0.1);
+            background: #333;
+        }
+
+        .piece img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 10%;
+            pointer-events: none;
+            display: block;
+        }
+
+        .piece .crown {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 22px;
+            filter: drop-shadow(0 1px 3px black);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .cell.can-select .piece:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+        }
+
+        #scores {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+        }
+
+        .score-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(200,168,0,0.3);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .score-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(200,168,0,0.5);
+            background: #555;
+            flex-shrink: 0;
+        }
+
+        .score-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 10%;
+        }
+
+        .score-label { color: #aaa; font-size: 0.8rem; }
+        .score-num { font-weight: bold; font-size: 1.3rem; color: #f5d020; }
+
+        #restart-btn {
+            margin-top: 12px;
+            padding: 10px 28px;
+            background: linear-gradient(90deg, #c8a800, #f5d020);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        #restart-btn:hover { opacity: 0.88; transform: scale(1.03); }
+        #restart-btn:active { transform: scale(0.97); }
+
+        /* Win overlay */
+        #overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        #overlay.show { display: flex; }
+        #overlay-box {
+            background: #1a1a2e;
+            border: 3px solid #c8a800;
+            border-radius: 18px;
+            padding: 44px 52px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(200,168,0,0.5);
+        }
+        #overlay-title { font-size: 2.4rem; margin-bottom: 8px; }
+        #overlay-sub { color: #f5d020; font-size: 1.1rem; margin-bottom: 26px; }
+        #overlay-btn {
+            padding: 12px 36px;
+            background: linear-gradient(90deg, #c8a800, #f5d020);
+            color: #1a1a2e; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: bold; cursor: pointer;
+        }
+        #overlay-btn:hover { opacity: 0.88; }
+
+        /* Difficulty selector */
+        #difficulty {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .diff-btn {
+            padding: 6px 18px;
+            border: 2px solid rgba(200,168,0,0.4);
+            background: rgba(255,255,255,0.06);
+            color: #aaa;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .diff-btn:hover { border-color: #f5d020; color: #f5d020; }
+        .diff-btn.active {
+            background: linear-gradient(90deg, #c8a800, #f5d020);
+            border-color: transparent;
+            color: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚔️ WW3 ⚔️</h1>
+    <div id="difficulty">
+        <button class="diff-btn" data-d="easy"   onclick="setDifficulty('easy')">קל</button>
+        <button class="diff-btn active" data-d="medium" onclick="setDifficulty('medium')">בינוני</button>
+        <button class="diff-btn" data-d="hard"   onclick="setDifficulty('hard')">קשה</button>
+    </div>
+    <div id="status">טוען...</div>
+
+    <div id="board-wrap">
+        <div id="board"></div>
+    </div>
+
+    <div id="scores">
+        <div class="score-box">
+            <div class="score-icon"><img src="Donald_Trump_official_portrait-removebg-preview.jpg" alt="Trump"></div>
+            <div>
+                <div class="score-label">🇺🇸 טראמפ (אתה)</div>
+                <div class="score-num" id="trump-count">12</div>
+            </div>
+        </div>
+        <div class="score-box">
+            <div class="score-icon"><img src="Meeting_of_the_families_of_the_martyrs_of_the_authority_with_the_Leader_of_the_Revolution_on_the_birthday_of_Amir_al-Mu'minin_(peace_be_upon_him)_58_(khamenei.ir,_2026)_(cropped_3)-removebg-preview.jpg" alt="Khamenei"></div>
+            <div>
+                <div class="score-label">🇮🇷 חמינאי (AI)</div>
+                <div class="score-num" id="khamenei-count">12</div>
+            </div>
+        </div>
+    </div>
+
+    <button id="restart-btn" onclick="initGame()">🔄 התחל מחדש</button>
+
+    <div id="overlay">
+        <div id="overlay-box">
+            <div id="overlay-title"></div>
+            <div id="overlay-sub"></div>
+            <button id="overlay-btn" onclick="hideOverlay();initGame();">שחק שוב</button>
+        </div>
+    </div>
+
+    <script>
+        // ── Image paths ──────────────────────────────────────────────────────────
+        const IMG_TRUMP    = "Donald_Trump_official_portrait-removebg-preview.jpg";
+        const IMG_KHAMENEI = "Meeting_of_the_families_of_the_martyrs_of_the_authority_with_the_Leader_of_the_Revolution_on_the_birthday_of_Amir_al-Mu'minin_(peace_be_upon_him)_58_(khamenei.ir,_2026)_(cropped_3)-removebg-preview.jpg";
+
+        // ── Piece constants ──────────────────────────────────────────────────────
+        const EMPTY=0, W=1, B=2, WK=3, BK=4;
+        const isW    = p => p===W  || p===WK;
+        const isB    = p => p===B  || p===BK;
+        const isKing = p => p===WK || p===BK;
+        const copy   = b => b.map(r=>[...r]);
+
+        // ── Game state ───────────────────────────────────────────────────────────
+        let board, selected, playerMoves, currentTurn, gameOver, aiThinking;
+        let difficulty = 'medium';
+
+        function setDifficulty(d) {
+            difficulty = d;
+            document.querySelectorAll('.diff-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.d === d)
+            );
+            initGame();
+        }
+
+        // ── Movement directions ──────────────────────────────────────────────────
+        function dirs(piece) {
+            if (isKing(piece)) return [[-1,-1],[-1,1],[1,-1],[1,1]];
+            return isW(piece) ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
+        }
+
+        // ── Generate all jump sequences from (r,c) ───────────────────────────────
+        // Returns [{toRow, toCol, captured:[{r,c},...]}]
+        function getJumps(b, r, c, already=[]) {
+            const p = b[r][c];
+            const seqs = [];
+            for (const [dr,dc] of dirs(p)) {
+                const mr=r+dr, mc=c+dc, lr=r+2*dr, lc=c+2*dc;
+                if (lr<0||lr>7||lc<0||lc>7) continue;
+                const mid = b[mr][mc];
+                if (mid===EMPTY) continue;
+                if ((isW(p)&&isW(mid)) || (isB(p)&&isB(mid))) continue; // same side
+                if (already.some(x=>x.r===mr&&x.c===mc)) continue;       // already jumped
+                if (b[lr][lc]!==EMPTY) continue;                          // landing occupied
+
+                const newCap = [...already, {r:mr,c:mc}];
+                const nb = copy(b);
+                nb[lr][lc]=p; nb[r][c]=EMPTY; nb[mr][mc]=EMPTY;
+
+                // Promotion stops the chain
+                if (p===W&&lr===0) { nb[lr][lc]=WK; seqs.push({toRow:lr,toCol:lc,captured:newCap}); continue; }
+                if (p===B&&lr===7) { nb[lr][lc]=BK; seqs.push({toRow:lr,toCol:lc,captured:newCap}); continue; }
+
+                const further = getJumps(nb, lr, lc, newCap);
+                if (further.length) seqs.push(...further);
+                else seqs.push({toRow:lr,toCol:lc,captured:newCap});
+            }
+            return seqs;
+        }
+
+        // ── All legal moves for a player (mandatory capture enforced) ─────────────
+        function getAllMoves(b, player) {
+            const jumps=[], normal=[];
+            for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+                const p = b[r][c];
+                if (player===W ? !isW(p) : !isB(p)) continue;
+
+                for (const j of getJumps(b,r,c))
+                    jumps.push({fromRow:r,fromCol:c,...j});
+
+                for (const [dr,dc] of dirs(p)) {
+                    const nr=r+dr, nc=c+dc;
+                    if (nr>=0&&nr<=7&&nc>=0&&nc<=7&&b[nr][nc]===EMPTY)
+                        normal.push({fromRow:r,fromCol:c,toRow:nr,toCol:nc,captured:[]});
+                }
+            }
+            return jumps.length ? jumps : normal;
+        }
+
+        // ── Apply a move to a board copy ─────────────────────────────────────────
+        function applyMove(b, m) {
+            const nb = copy(b);
+            const p  = nb[m.fromRow][m.fromCol];
+            nb[m.toRow][m.toCol] = p;
+            nb[m.fromRow][m.fromCol] = EMPTY;
+            for (const {r,c} of m.captured) nb[r][c]=EMPTY;
+            if (p===W&&m.toRow===0) nb[m.toRow][m.toCol]=WK;
+            if (p===B&&m.toRow===7) nb[m.toRow][m.toCol]=BK;
+            return nb;
+        }
+
+        // ── Evaluation (positive = good for AI/Khamenei) ─────────────────────────
+        function evaluate(b) {
+            let s=0;
+            for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+                const p=b[r][c];
+                if      (p===W)  s -= (1 + 0.05*(7-r));  // bonus for advancing
+                else if (p===WK) s -= 2.5;
+                else if (p===B)  s += (1 + 0.05*r);
+                else if (p===BK) s += 2.5;
+            }
+            return s;
+        }
+
+        // ── Minimax with alpha-beta pruning ──────────────────────────────────────
+        function minimax(b, depth, alpha, beta, maxing) {
+            const moves = getAllMoves(b, maxing?B:W);
+            if (!depth || !moves.length) return evaluate(b);
+
+            if (maxing) {
+                let best=-Infinity;
+                for (const m of moves) {
+                    best = Math.max(best, minimax(applyMove(b,m), depth-1, alpha, beta, false));
+                    alpha = Math.max(alpha, best);
+                    if (beta<=alpha) break;
+                }
+                return best;
+            } else {
+                let best=Infinity;
+                for (const m of moves) {
+                    best = Math.min(best, minimax(applyMove(b,m), depth-1, alpha, beta, true));
+                    beta = Math.min(beta, best);
+                    if (beta<=alpha) break;
+                }
+                return best;
+            }
+        }
+
+        // ── Pick best AI move ────────────────────────────────────────────────────
+        function getBestMove() {
+            const moves = getAllMoves(board, B);
+            if (!moves.length) return null;
+
+            // Easy: 55% chance of a random move
+            if (difficulty === 'easy' && Math.random() < 0.55)
+                return moves[Math.floor(Math.random()*moves.length)];
+
+            // Depth by difficulty + piece count
+            let cnt=0;
+            for (let r=0;r<8;r++) for (let c=0;c<8;c++) if(board[r][c]!==EMPTY) cnt++;
+
+            let depth;
+            if      (difficulty === 'easy')   depth = 1;
+            else if (difficulty === 'medium') depth = cnt>16 ? 3 : cnt>8 ? 4 : 5;
+            else                              depth = cnt>16 ? 5 : cnt>8 ? 6 : 7;
+
+            let best=-Infinity, bestMoves=[];
+            for (const m of moves) {
+                const score = minimax(applyMove(board,m), depth, -Infinity, Infinity, false);
+                if (score > best+0.001)      { best=score; bestMoves=[m]; }
+                else if (score >= best-0.001){ bestMoves.push(m); }
+            }
+            return bestMoves[Math.floor(Math.random()*bestMoves.length)];
+        }
+
+        // ── Initialize / reset game ──────────────────────────────────────────────
+        function initGame() {
+            board = Array(8).fill(null).map(()=>Array(8).fill(EMPTY));
+            for (let r=0;r<3;r++) for (let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=B;
+            for (let r=5;r<8;r++) for (let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=W;
+            selected=null; currentTurn=W; gameOver=false; aiThinking=false;
+            playerMoves=getAllMoves(board,W);
+            hideOverlay();
+            render();
+            setStatus('תורך! בחר כלי 👇');
+        }
+
+        // ── Render board ─────────────────────────────────────────────────────────
+        function render() {
+            const boardDiv = document.getElementById('board');
+            boardDiv.innerHTML = '';
+
+            const selectable = new Set();
+            const validDest  = new Set();
+            if (!gameOver && !aiThinking && currentTurn===W) {
+                for (const m of playerMoves) selectable.add(`${m.fromRow},${m.fromCol}`);
+                if (selected) {
+                    for (const m of playerMoves)
+                        if (m.fromRow===selected.r && m.fromCol===selected.c)
+                            validDest.add(`${m.toRow},${m.toCol}`);
+                }
+            }
+
+            for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+                const cell = document.createElement('div');
+                const dark = (r+c)%2===1;
+                cell.className = 'cell ' + (dark?'dark':'light');
+
+                const isSel  = selected && selected.r===r && selected.c===c;
+                const isDest = validDest.has(`${r},${c}`);
+                const isCan  = selectable.has(`${r},${c}`);
+
+                if (isSel)       cell.classList.add('selected');
+                else if (isDest) cell.classList.add('valid-move');
+                else if (isCan)  cell.classList.add('can-select');
+
+                const p = board[r][c];
+                if (p !== EMPTY) {
+                    const pd = document.createElement('div');
+                    pd.className = 'piece ' + (isW(p)?'trump':'khamenei');
+
+                    const img = document.createElement('img');
+                    img.src = isW(p) ? IMG_TRUMP : IMG_KHAMENEI;
+                    img.alt = isW(p) ? 'Trump' : 'Khamenei';
+                    pd.appendChild(img);
+
+                    if (isKing(p)) {
+                        const crown = document.createElement('span');
+                        crown.className = 'crown';
+                        crown.textContent = '👑';
+                        pd.appendChild(crown);
+                    }
+                    cell.appendChild(pd);
+                }
+
+                cell.addEventListener('click', ()=>handleClick(r,c));
+                boardDiv.appendChild(cell);
+            }
+
+            // Update piece counts
+            let wc=0, bc=0;
+            for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+                if (isW(board[r][c])) wc++;
+                else if (isB(board[r][c])) bc++;
+            }
+            document.getElementById('trump-count').textContent   = wc;
+            document.getElementById('khamenei-count').textContent = bc;
+        }
+
+        // ── Click handler ────────────────────────────────────────────────────────
+        function handleClick(r,c) {
+            if (gameOver || aiThinking || currentTurn!==W) return;
+
+            // Click on valid destination
+            if (selected) {
+                const opts = playerMoves.filter(m =>
+                    m.fromRow===selected.r && m.fromCol===selected.c &&
+                    m.toRow===r && m.toCol===c
+                );
+                if (opts.length) {
+                    // Prefer moves with most captures
+                    const move = opts.sort((a,b)=>b.captured.length-a.captured.length)[0];
+                    doPlayerMove(move);
+                    return;
+                }
+            }
+
+            // Click on own selectable piece
+            if (playerMoves.some(m=>m.fromRow===r&&m.fromCol===c)) {
+                selected = {r,c};
+                render();
+                return;
+            }
+
+            // Deselect
+            if (selected) { selected=null; render(); }
+        }
+
+        // ── Execute player move then trigger AI ──────────────────────────────────
+        function doPlayerMove(move) {
+            board = applyMove(board, move);
+            selected = null;
+
+            const bMoves = getAllMoves(board, B);
+            if (!bMoves.length) {
+                gameOver=true; render();
+                showOverlay('🇺🇸 טראמפ ניצח! 🏆', 'חמינאי נגמרו לו הכוחות');
+                return;
+            }
+
+            currentTurn=B; aiThinking=true;
+            setStatus('חמינאי חושב... 🤔');
+            render();
+
+            setTimeout(()=>{
+                const aiMove = getBestMove();
+                if (aiMove) board = applyMove(board, aiMove);
+
+                const wMoves = getAllMoves(board, W);
+                if (!wMoves.length) {
+                    gameOver=true; currentTurn=W; playerMoves=[]; aiThinking=false;
+                    render();
+                    showOverlay('🇮🇷 חמינאי ניצח! ☠️', 'טראמפ נגמרו לו הכוחות');
+                    return;
+                }
+
+                currentTurn=W; playerMoves=getAllMoves(board,W); aiThinking=false;
+                render();
+                setStatus('תורך! בחר כלי 👇');
+            }, 500);
+        }
+
+        // ── Overlay helpers ──────────────────────────────────────────────────────
+        function showOverlay(title, sub) {
+            document.getElementById('overlay-title').textContent = title;
+            document.getElementById('overlay-sub').textContent   = sub;
+            document.getElementById('overlay').classList.add('show');
+        }
+        function hideOverlay() {
+            document.getElementById('overlay').classList.remove('show');
+        }
+        function setStatus(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+
+        // ── Start! ───────────────────────────────────────────────────────────────
+        initGame();
+    </script>
+</body>
+</html>
