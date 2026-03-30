@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WW3</title>
     <style>
+        :root {
+            --cell: min(72px, calc((100vw - 40px) / 8));
+            --piece: calc(var(--cell) * 0.88);
+            --crown: calc(var(--cell) * 0.3);
+            --dot: calc(var(--cell) * 0.33);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
@@ -20,7 +27,7 @@
         }
 
         h1 {
-            font-size: 1.9rem;
+            font-size: clamp(1.2rem, 5vw, 1.9rem);
             margin-bottom: 8px;
             background: linear-gradient(90deg, #c8a800, #f5d020, #c8a800);
             -webkit-background-clip: text;
@@ -30,7 +37,7 @@
         }
 
         #status {
-            font-size: 1.05rem;
+            font-size: clamp(0.85rem, 3vw, 1.05rem);
             margin-bottom: 10px;
             min-height: 26px;
             color: #f5d020;
@@ -47,13 +54,13 @@
 
         #board {
             display: grid;
-            grid-template-columns: repeat(8, 72px);
-            grid-template-rows: repeat(8, 72px);
+            grid-template-columns: repeat(8, var(--cell));
+            grid-template-rows: repeat(8, var(--cell));
         }
 
         .cell {
-            width: 72px;
-            height: 72px;
+            width: var(--cell);
+            height: var(--cell);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -70,8 +77,8 @@
 
         .cell.valid-move::before {
             content: '';
-            width: 24px;
-            height: 24px;
+            width: var(--dot);
+            height: var(--dot);
             background: rgba(255,255,255,0.45);
             border-radius: 50%;
             position: absolute;
@@ -79,8 +86,8 @@
         }
 
         .piece {
-            width: 64px;
-            height: 64px;
+            width: var(--piece);
+            height: var(--piece);
             border-radius: 50%;
             overflow: hidden;
             position: relative;
@@ -113,10 +120,10 @@
 
         .piece .crown {
             position: absolute;
-            top: -10px;
+            top: calc(var(--crown) * -0.45);
             left: 50%;
             transform: translateX(-50%);
-            font-size: 22px;
+            font-size: var(--crown);
             filter: drop-shadow(0 1px 3px black);
             z-index: 2;
             pointer-events: none;
@@ -129,8 +136,10 @@
 
         #scores {
             display: flex;
-            gap: 24px;
+            gap: clamp(10px, 3vw, 24px);
             margin-top: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .score-box {
@@ -141,12 +150,12 @@
             border: 1px solid rgba(200,168,0,0.3);
             padding: 8px 16px;
             border-radius: 12px;
-            font-size: 0.9rem;
+            font-size: clamp(0.75rem, 2.5vw, 0.9rem);
         }
 
         .score-icon {
-            width: 40px;
-            height: 40px;
+            width: clamp(30px, 6vw, 40px);
+            height: clamp(30px, 6vw, 40px);
             border-radius: 50%;
             overflow: hidden;
             border: 2px solid rgba(200,168,0,0.5);
@@ -195,12 +204,14 @@
             background: #1a1a2e;
             border: 3px solid #c8a800;
             border-radius: 18px;
-            padding: 44px 52px;
+            padding: clamp(24px, 6vw, 44px) clamp(20px, 8vw, 52px);
             text-align: center;
             box-shadow: 0 0 60px rgba(200,168,0,0.5);
+            margin: 16px;
+            max-width: 90vw;
         }
-        #overlay-title { font-size: 2.4rem; margin-bottom: 8px; }
-        #overlay-sub { color: #f5d020; font-size: 1.1rem; margin-bottom: 26px; }
+        #overlay-title { font-size: clamp(1.4rem, 5vw, 2.4rem); margin-bottom: 8px; }
+        #overlay-sub { color: #f5d020; font-size: clamp(0.9rem, 3vw, 1.1rem); margin-bottom: 26px; }
         #overlay-btn {
             padding: 12px 36px;
             background: linear-gradient(90deg, #c8a800, #f5d020);
