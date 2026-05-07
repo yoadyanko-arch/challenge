@@ -2,7 +2,7 @@ export type Pillar = 'think' | 'people' | 'business' | 'self'
 export type CardType = 'concept' | 'scenario' | 'challenge' | 'bias'
 export type CardStatus = 'pending' | 'approved' | 'rejected'
 export type Difficulty = 'easy' | 'medium' | 'hard'
-export type FriendStatus = 'pending' | 'accepted'
+export type FriendStatus = 'pending' | 'accepted' | 'declined'
 
 export interface Card {
   id: string
@@ -95,10 +95,12 @@ export interface UserBadge {
   badge?: Badge
 }
 
+export type NotificationType = 'streak_reminder' | 'friend_passed' | 'badge_earned' | 'friend_request'
+
 export interface Notification {
   id: string
   user_id: string
-  type: string
+  type: NotificationType
   message: string
   read: boolean
   created_at: string
@@ -117,9 +119,10 @@ export const PILLAR_LABELS: Record<Pillar, string> = {
   self: 'עצמי',
 }
 
-export const LEVEL_XP_THRESHOLDS = [0, 100, 250, 500, 900, 1400, 2000, 2800, 3800, 5000]
+export const LEVEL_XP_THRESHOLDS = [0, 100, 250, 500, 900, 1400, 2000, 2800, 3800, 5000] as const
 
 export function getLevelFromXP(xp: number): number {
+  if (xp < 0) return 1
   for (let i = LEVEL_XP_THRESHOLDS.length - 1; i >= 0; i--) {
     if (xp >= LEVEL_XP_THRESHOLDS[i]) return i + 1
   }
