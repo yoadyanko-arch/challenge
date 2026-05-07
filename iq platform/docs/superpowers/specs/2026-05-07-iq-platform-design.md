@@ -1,4 +1,4 @@
-# IQ Platform — Product Spec
+# Mastermind — Product Spec
 
 **Date:** 2026-05-07
 **Status:** Approved
@@ -9,6 +9,8 @@
 
 A practical intelligence platform where users scroll through smart content instead of social media. The experience mirrors Duolingo — fun, gamified, progress-driven — but focused on real-life wisdom: decision making, business, psychology, and self-mastery.
 
+**Name:** Mastermind
+
 **Tagline:** "גלול ותהיה חכם יותר" — scroll and become smarter.
 
 **Core loop:** Open app → scroll smart cards → answer / reflect → earn XP → maintain streak → level up.
@@ -17,12 +19,24 @@ A practical intelligence platform where users scroll through smart content inste
 
 ## The 4 Pillars
 
-| Pillar | Hebrew | Topics |
-|--------|--------|--------|
-| Think | חשיבה | Decision making, cognitive biases, logic, science & statistics, systems thinking, historical patterns |
-| People | אנשים | Psychology, communication, persuasion, negotiation, leadership, management |
-| עסקים | עסקים | Business strategy, economics, investing, innovation, financial literacy |
-| Self | עצמי | Productivity, focus, practical philosophy, habits |
+| Pillar | Hebrew | Sub-Topics |
+|--------|--------|------------|
+| Think | חשיבה | הטיות קוגניטיביות, לוגיקה, סטטיסטיקה, חשיבה מערכתית, היסטוריה |
+| People | אנשים | פסיכולוגיה, משא ומתן, תקשורת, מנהיגות, שכנוע |
+| עסקים | עסקים | נדל"ן, שוק ההון, יזמות, מכירות, שיווק, מיסוי, קריפטו, אסטרטגיה |
+| Self | עצמי | פרודוקטיביות, הרגלים, פילוסופיה, פיננסים אישיים |
+
+### Topic System
+
+Cards carry an optional `topic` tag within their pillar. Users filter by pillar first, then optionally by topic (e.g., "only real estate cards"). This adds depth without breaking the clean 4-pillar navigation.
+
+**Think:** `biases` · `logic` · `statistics` · `systems` · `history`
+
+**People:** `psychology` · `negotiation` · `communication` · `leadership` · `persuasion`
+
+**עסקים:** `real_estate` · `stocks` · `entrepreneurship` · `sales` · `marketing` · `tax` · `crypto` · `strategy`
+
+**Self:** `productivity` · `habits` · `philosophy` · `personal_finance`
 
 ---
 
@@ -60,7 +74,7 @@ Each type maps naturally to pillars: Scenario → People, Challenge → Think, C
 ```sql
 users           id, email, username, avatar_url, streak, xp_total, last_active, created_at
 progress        user_id, pillar, xp, cards_completed, level        -- one row per pillar
-cards           id, pillar, type, title, content, explanation,
+cards           id, pillar, type, topic (optional), title, content, explanation,
                 options jsonb, correct_answer, xp_reward,
                 difficulty (easy/medium/hard), status (pending/approved/rejected), created_at
 card_history    user_id, card_id, completed_at, was_correct, xp_earned
