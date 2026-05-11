@@ -4,12 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutGrid, ListChecks, Settings, ArrowRight } from 'lucide-react'
+import { isAdmin } from '@/lib/admin'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdmin(user?.email)) {
     redirect('/feed')
   }
 

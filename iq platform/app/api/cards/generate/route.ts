@@ -3,11 +3,12 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { generateBatch } from '@/lib/claude/generate'
 import type { Pillar, CardType, Difficulty } from '@/types'
 import { XP_VALUES } from '@/types'
+import { isAdmin } from '@/lib/admin'
 
 export async function POST(req: NextRequest) {
   const authClient = await createClient()
   const { data: { user } } = await authClient.auth.getUser()
-  if (user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdmin(user?.email)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
