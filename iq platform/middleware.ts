@@ -37,10 +37,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/feed', request.url))
   }
 
-  if (isAdminPath && user?.email !== process.env.ADMIN_EMAIL) {
-    return NextResponse.redirect(new URL('/feed', request.url))
-  }
-
   return supabaseResponse
 }
 
