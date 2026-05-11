@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { generateBatch } from '@/lib/claude/generate'
 import type { Pillar, CardType, Difficulty } from '@/types'
 import { XP_VALUES } from '@/types'
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const authClient = await createClient()
+  const { data: { user } } = await authClient.auth.getUser()
   if (user?.email !== process.env.ADMIN_EMAIL) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     ...g,
   }))
 
-  const { data, error } = await supabase.from('cards').insert(cards).select()
+  const service = createServiceClient()
+  const { data, error } = await service.from('cards').insert(cards).select()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ created: data.length })

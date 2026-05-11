@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { getPendingCards } from '@/lib/supabase/queries'
 import AdminCardReview from './AdminCardReview'
 
 export default async function QueuePage() {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const cards = await getPendingCards(supabase)
 
   return (
