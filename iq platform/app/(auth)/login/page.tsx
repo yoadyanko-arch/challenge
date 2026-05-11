@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -24,6 +25,17 @@ export default function LoginPage() {
     if (error) { setError(error.message); setLoading(false); return }
     router.push('/feed')
     router.refresh()
+  }
+
+  async function handleForgotPassword() {
+    if (!email) { setError('הכנס אימייל תחילה'); return }
+    setLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    setLoading(false)
+    if (error) { setError(error.message); return }
+    setInfo('נשלח מייל לאיפוס סיסמה — בדוק את תיבת הדואר שלך')
   }
 
   return (
@@ -42,13 +54,16 @@ export default function LoginPage() {
             <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
+          {info && <p className="text-green-600 text-sm">{info}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'נכנס...' : 'כניסה'}
           </Button>
-          <p className="text-center text-sm text-gray-500">
-            אין לך חשבון?{' '}
+          <div className="flex justify-between text-sm text-gray-500">
             <Link href="/register" className="text-indigo-600 hover:underline">הרשם</Link>
-          </p>
+            <button type="button" onClick={handleForgotPassword} className="hover:underline">
+              שכחתי סיסמה
+            </button>
+          </div>
         </form>
       </CardContent>
     </Card>
