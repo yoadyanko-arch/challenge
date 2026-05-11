@@ -10,13 +10,13 @@ export default function CardConcept({ card, onComplete }: { card: Card; onComple
 
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={revealed ? XP_VALUES[card.difficulty] : undefined} showNext={revealed}>
-      <p className="text-gray-700 leading-relaxed">{card.content}</p>
+      <p className="text-foreground/80 leading-relaxed text-sm">{card.content}</p>
       {!revealed ? (
         <Button variant="outline" className="w-full" onClick={() => setRevealed(true)}>
           הצג הסבר
         </Button>
       ) : (
-        <div className="bg-indigo-50 rounded-lg p-3 text-sm text-gray-700 border border-indigo-100">
+        <div className="bg-accent rounded-xl p-4 text-sm text-foreground border border-primary/20">
           {card.explanation}
         </div>
       )}

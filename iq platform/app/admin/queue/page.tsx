@@ -8,11 +8,20 @@ export default async function QueuePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">תור אישור ({cards.length} ממתינים)</h1>
-      {cards.length === 0 && <p className="text-gray-400">אין כרטיסים ממתינים.</p>}
-      {cards.map(card => (
-        <AdminCardReview key={card.id} card={card} />
-      ))}
+      <div>
+        <h1 className="text-lg font-bold tracking-tight">תור אישור</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{cards.length} כרטיסים ממתינים לאישור</p>
+      </div>
+      {cards.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground text-sm">
+          אין כרטיסים ממתינים
+        </div>
+      )}
+      <div className="space-y-3">
+        {cards.map(card => (
+          <AdminCardReview key={card.id} card={card} />
+        ))}
+      </div>
     </div>
   )
 }

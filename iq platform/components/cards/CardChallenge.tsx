@@ -13,16 +13,16 @@ export default function CardChallenge({ card, onComplete }: { card: Card; onComp
 
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={xp} showNext={selected !== null}>
-      <p className="text-gray-700 font-medium">{card.content}</p>
+      <p className="text-foreground/80 font-medium text-sm">{card.content}</p>
       <div className="grid grid-cols-2 gap-2">
         {options.map((option, i) => {
-          let cls = 'p-3 rounded-lg border text-sm text-center cursor-pointer transition-colors'
+          let cls = 'p-3 rounded-xl border text-sm text-center transition-all font-medium'
           if (selected !== null) {
-            if (i === correctIndex) cls += ' border-green-500 bg-green-50 text-green-800'
-            else if (i === selected && !isCorrect) cls += ' border-red-400 bg-red-50 text-red-700'
-            else cls += ' border-gray-200 text-gray-400'
+            if (i === correctIndex) cls += ' border-emerald-500 bg-emerald-50 text-emerald-800'
+            else if (i === selected && !isCorrect) cls += ' border-destructive/60 bg-destructive/5 text-destructive'
+            else cls += ' border-border text-muted-foreground opacity-50'
           } else {
-            cls += ' border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
+            cls += ' border-border hover:border-primary hover:bg-accent cursor-pointer'
           }
           return (
             <button key={i} onClick={() => selected === null && setSelected(i)} className={cls}>
@@ -32,7 +32,7 @@ export default function CardChallenge({ card, onComplete }: { card: Card; onComp
         })}
       </div>
       {selected !== null && (
-        <div className="bg-indigo-50 rounded-lg p-3 text-sm text-gray-700 border border-indigo-100">
+        <div className="bg-accent rounded-xl p-4 text-sm text-foreground border border-primary/20">
           {card.explanation}
         </div>
       )}

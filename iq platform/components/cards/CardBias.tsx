@@ -10,16 +10,16 @@ export default function CardBias({ card, onComplete }: { card: Card; onComplete:
 
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={revealed ? XP_VALUES[card.difficulty] : undefined} showNext={revealed}>
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-        <p className="font-semibold text-amber-800 mb-1">הטיה קוגניטיבית</p>
-        <p className="text-gray-700">{card.content}</p>
+      <div className="bg-accent border border-primary/20 rounded-xl p-4">
+        <p className="font-semibold text-accent-foreground text-xs uppercase tracking-wide mb-2">הטיה קוגניטיבית</p>
+        <p className="text-foreground/80 text-sm">{card.content}</p>
       </div>
       {!revealed ? (
         <Button variant="outline" className="w-full" onClick={() => setRevealed(true)}>
           איך להימנע?
         </Button>
       ) : (
-        <div className="bg-indigo-50 rounded-lg p-3 text-sm text-gray-700 border border-indigo-100">
+        <div className="bg-accent rounded-xl p-4 text-sm text-foreground border border-primary/20">
           {card.explanation}
         </div>
       )}

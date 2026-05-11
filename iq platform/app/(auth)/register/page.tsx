@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -22,7 +21,6 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    // Create user + profile via server API (uses service role to bypass RLS)
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,7 +29,6 @@ export default function RegisterPage() {
     const data = await res.json()
     if (!data.ok) { setError(data.error ?? 'שגיאה'); setLoading(false); return }
 
-    // Sign in so we have a session
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) { setError(signInError.message); setLoading(false); return }
 
@@ -40,34 +37,60 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-center text-2xl">הצטרף 🚀</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <Label htmlFor="username">שם משתמש</Label>
-            <Input id="username" value={username} onChange={e => setUsername(e.target.value)} required />
-          </div>
-          <div>
-            <Label htmlFor="email">אימייל</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-          </div>
-          <div>
-            <Label htmlFor="password">סיסמה</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'נרשם...' : 'הרשמה'}
-          </Button>
-          <p className="text-center text-sm text-gray-500">
-            כבר יש לך חשבון?{' '}
-            <Link href="/login" className="text-indigo-600 hover:underline">התחבר</Link>
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Mastermind</h1>
+        <p className="text-muted-foreground mt-1 text-sm">יצירת חשבון חדש</p>
+      </div>
+
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="username">שם משתמש</Label>
+          <Input
+            id="username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+            className="h-11"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">אימייל</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            className="h-11"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">סיסמה</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="h-11"
+          />
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <Button type="submit" className="w-full h-11" disabled={loading}>
+          {loading ? 'נרשם...' : 'הרשמה'}
+        </Button>
+      </form>
+
+      <p className="text-sm text-muted-foreground text-center">
+        כבר יש לך חשבון?{' '}
+        <Link href="/login" className="text-foreground hover:underline">
+          התחבר
+        </Link>
+      </p>
+    </div>
   )
 }

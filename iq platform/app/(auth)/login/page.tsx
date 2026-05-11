@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -39,33 +38,56 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-center text-2xl">ברוך הבא 🧠</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="email">אימייל</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-          </div>
-          <div>
-            <Label htmlFor="password">סיסמה</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {info && <p className="text-green-600 text-sm">{info}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'נכנס...' : 'כניסה'}
-          </Button>
-          <div className="flex justify-between text-sm text-gray-500">
-            <Link href="/register" className="text-indigo-600 hover:underline">הרשם</Link>
-            <button type="button" onClick={handleForgotPassword} className="hover:underline">
-              שכחתי סיסמה
-            </button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Mastermind</h1>
+        <p className="text-muted-foreground mt-1 text-sm">כניסה לחשבון</p>
+      </div>
+
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="email">אימייל</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            className="h-11"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">סיסמה</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            className="h-11"
+          />
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        {info && <p className="text-sm text-emerald-600">{info}</p>}
+
+        <Button type="submit" className="w-full h-11" disabled={loading}>
+          {loading ? 'נכנס...' : 'כניסה'}
+        </Button>
+      </form>
+
+      <div className="flex justify-between text-sm text-muted-foreground">
+        <Link href="/register" className="hover:text-foreground transition-colors">
+          צור חשבון
+        </Link>
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          className="hover:text-foreground transition-colors"
+        >
+          שכחתי סיסמה
+        </button>
+      </div>
+    </div>
   )
 }

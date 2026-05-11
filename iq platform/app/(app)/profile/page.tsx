@@ -18,38 +18,42 @@ export default async function ProfilePage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-2xl">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-muted border border-border flex items-center justify-center text-xl font-bold text-foreground">
           {profile?.username?.[0]?.toUpperCase() ?? '?'}
         </div>
         <div>
-          <h1 className="text-xl font-bold">{profile?.username}</h1>
-          <p className="text-gray-400 text-sm">{profile?.xp_total} XP סה&quot;כ</p>
+          <h1 className="text-xl font-bold tracking-tight">{profile?.username}</h1>
+          <p className="text-muted-foreground text-sm">{profile?.xp_total ?? 0} XP סה&quot;כ</p>
         </div>
       </div>
 
       <StreakBadge streak={profile?.streak ?? 0} />
 
       <div className="space-y-3">
-        <h2 className="font-semibold text-gray-700">התקדמות לפי עמודה</h2>
+        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-widest">התקדמות</h2>
         {(progress ?? []).map(p => (
-          <div key={p.pillar} className="bg-white rounded-xl p-3 border">
-            <div className="flex justify-between mb-2">
-              <span className="font-medium">{PILLAR_LABELS[p.pillar as Pillar]}</span>
-              <span className="text-sm text-gray-400">{p.cards_completed} כרטיסים</span>
+          <div key={p.pillar} className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex justify-between mb-3">
+              <span className="font-semibold text-sm">{PILLAR_LABELS[p.pillar as Pillar]}</span>
+              <span className="text-xs text-muted-foreground">{p.cards_completed} כרטיסים</span>
             </div>
             <XPBar xp={p.xp} level={p.level} />
           </div>
         ))}
       </div>
 
-      <div className="space-y-3">
-        <h2 className="font-semibold text-gray-700">תגים</h2>
-        <BadgeGrid badges={badges ?? []} />
-      </div>
+      {(badges ?? []).length > 0 && (
+        <div className="space-y-3">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-widest">תגים</h2>
+          <BadgeGrid badges={badges ?? []} />
+        </div>
+      )}
 
-      <form action="/api/auth/logout" method="POST">
-        <button className="text-sm text-gray-400 hover:text-red-500 transition-colors">התנתק</button>
+      <form action="/api/auth/logout" method="POST" className="pt-2">
+        <button className="text-sm text-muted-foreground hover:text-destructive transition-colors">
+          התנתק
+        </button>
       </form>
     </div>
   )

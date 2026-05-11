@@ -26,8 +26,8 @@ export default function FeedHeader({ activePillar, activeTopic }: Props) {
   const topics = activePillar !== 'all' ? PILLAR_TOPICS[activePillar] : []
 
   return (
-    <div className="sticky top-0 bg-gray-50 pt-4 pb-2 z-10">
-      <h1 className="text-xl font-bold px-4 mb-3">🧠 Mastermind</h1>
+    <div className="sticky top-0 bg-background border-b border-border pt-4 pb-2 z-10">
+      <h1 className="text-lg font-bold px-4 mb-3 tracking-tight">Mastermind</h1>
       <PillarFilter active={activePillar} onChange={handlePillarChange} />
       {topics.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 px-4 mt-2 no-scrollbar">

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { UserPlus, Flame } from 'lucide-react'
 
 interface Friend {
   friend_id: string
@@ -36,7 +37,7 @@ export default function FriendsPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-      <h1 className="text-xl font-bold">👥 חברים</h1>
+      <h1 className="text-xl font-bold tracking-tight">חברים</h1>
 
       <div className="flex gap-2">
         <Input
@@ -44,25 +45,41 @@ export default function FriendsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addFriend()}
+          className="h-10"
         />
-        <Button onClick={addFriend}>הוסף</Button>
+        <Button onClick={addFriend} size="sm" className="h-10 gap-1.5">
+          <UserPlus size={15} />
+          הוסף
+        </Button>
       </div>
-      {msg && <p className={`text-sm ${msg === 'חבר נוסף!' ? 'text-green-600' : 'text-red-500'}`}>{msg}</p>}
+
+      {msg && (
+        <p className={`text-sm font-medium ${msg === 'חבר נוסף!' ? 'text-emerald-600' : 'text-destructive'}`}>
+          {msg}
+        </p>
+      )}
 
       <div className="space-y-2">
-        {friends.length === 0 && <p className="text-gray-400 text-sm text-center py-6">עוד אין חברים — הוסף מישהו!</p>}
+        {friends.length === 0 && (
+          <p className="text-muted-foreground text-sm text-center py-10">
+            עוד אין חברים — הוסף מישהו
+          </p>
+        )}
         {friends.map(f => (
-          <div key={f.friend_id} className="flex items-center gap-3 bg-white p-3 rounded-xl border">
+          <div key={f.friend_id} className="flex items-center gap-3 bg-card p-3 rounded-xl border border-border">
             <Avatar className="h-9 w-9">
-              <AvatarFallback className="bg-indigo-100 text-indigo-600">
+              <AvatarFallback className="bg-muted text-foreground text-xs font-semibold">
                 {f.users.username[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <p className="font-medium text-sm">{f.users.username}</p>
-              <p className="text-xs text-gray-400">🔥 {f.users.streak}</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate">{f.users.username}</p>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Flame size={11} />
+                <span className="text-xs">{f.users.streak}</span>
+              </div>
             </div>
-            <span className="text-indigo-600 font-bold text-sm">{f.users.xp_total} XP</span>
+            <span className="text-primary font-bold text-sm tabular-nums">{f.users.xp_total} XP</span>
           </div>
         ))}
       </div>

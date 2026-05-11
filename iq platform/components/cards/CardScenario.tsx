@@ -19,16 +19,16 @@ export default function CardScenario({ card, onComplete }: { card: Card; onCompl
 
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={xp} showNext={selected !== null}>
-      <p className="text-gray-700 leading-relaxed">{card.content}</p>
+      <p className="text-foreground/80 leading-relaxed text-sm">{card.content}</p>
       <div className="space-y-2">
         {options.map((option, i) => {
-          let cls = 'w-full text-right p-3 rounded-lg border text-sm transition-colors'
+          let cls = 'w-full text-right p-3 rounded-xl border text-sm transition-all font-medium'
           if (selected !== null) {
-            if (i === correctIndex) cls += ' border-green-500 bg-green-50 text-green-800'
-            else if (i === selected && !isCorrect) cls += ' border-red-400 bg-red-50 text-red-700'
-            else cls += ' border-gray-200 text-gray-400'
+            if (i === correctIndex) cls += ' border-emerald-500 bg-emerald-50 text-emerald-800'
+            else if (i === selected && !isCorrect) cls += ' border-destructive/60 bg-destructive/5 text-destructive'
+            else cls += ' border-border text-muted-foreground opacity-50'
           } else {
-            cls += ' border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
+            cls += ' border-border hover:border-primary hover:bg-accent cursor-pointer'
           }
           return (
             <button key={i} onClick={() => handleSelect(i)} className={cls}>
@@ -38,7 +38,7 @@ export default function CardScenario({ card, onComplete }: { card: Card; onCompl
         })}
       </div>
       {selected !== null && (
-        <div className="bg-indigo-50 rounded-lg p-3 text-sm text-gray-700 border border-indigo-100">
+        <div className="bg-accent rounded-xl p-4 text-sm text-foreground border border-primary/20">
           {card.explanation}
         </div>
       )}

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { PILLAR_LABELS, PILLAR_TOPICS, type Pillar, type CardType, type Difficulty } from '@/types'
+import { Sparkles } from 'lucide-react'
 
 const CARD_TYPES: { value: CardType; label: string }[] = [
   { value: 'concept', label: 'מושג' },
@@ -37,53 +38,80 @@ export default function GeneratePage() {
       body: JSON.stringify({ pillar, type, difficulty, topic: topic || undefined, count }),
     })
     const data = await res.json()
-    setResult(data.created ? `נוצרו ${data.created} כרטיסים! עבור לתור לאישור.` : data.error)
+    setResult(data.created ? `נוצרו ${data.created} כרטיסים בהצלחה — עבור לתור לאישור.` : data.error)
     setLoading(false)
   }
 
+  const selectCls = 'w-full bg-muted border border-border text-foreground rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring transition-colors'
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">ייצור תוכן עם AI</h1>
+      <div>
+        <h1 className="text-lg font-bold tracking-tight">ייצור תוכן</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">יצירת כרטיסים חדשים באמצעות AI</p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>עמודה</Label>
-          <select className="w-full border rounded p-2 mt-1" value={pillar} onChange={e => { setPillar(e.target.value as Pillar); setTopic('') }}>
-            {(Object.keys(PILLAR_LABELS) as Pillar[]).map(p => (
-              <option key={p} value={p}>{PILLAR_LABELS[p]}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Label>נושא (אופציונלי)</Label>
-          <select className="w-full border rounded p-2 mt-1" value={topic} onChange={e => setTopic(e.target.value)}>
-            <option value="">כללי</option>
-            {topics.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <Label>סוג כרטיס</Label>
-          <select className="w-full border rounded p-2 mt-1" value={type} onChange={e => setType(e.target.value as CardType)}>
-            {CARD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <Label>קושי</Label>
-          <select className="w-full border rounded p-2 mt-1" value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)}>
-            {DIFFICULTIES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <Label>כמות (מקסימום 20)</Label>
-          <input type="number" min={1} max={20} className="w-full border rounded p-2 mt-1" value={count} onChange={e => setCount(Number(e.target.value))} />
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">עמודה</Label>
+            <select
+              className={selectCls}
+              value={pillar}
+              onChange={e => { setPillar(e.target.value as Pillar); setTopic('') }}
+            >
+              {(Object.keys(PILLAR_LABELS) as Pillar[]).map(p => (
+                <option key={p} value={p}>{PILLAR_LABELS[p]}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">נושא</Label>
+            <select className={selectCls} value={topic} onChange={e => setTopic(e.target.value)}>
+              <option value="">כללי</option>
+              {topics.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">סוג כרטיס</Label>
+            <select className={selectCls} value={type} onChange={e => setType(e.target.value as CardType)}>
+              {CARD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">קושי</Label>
+            <select className={selectCls} value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)}>
+              {DIFFICULTIES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">כמות (מקס׳ 20)</Label>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              className={selectCls}
+              value={count}
+              onChange={e => setCount(Number(e.target.value))}
+            />
+          </div>
         </div>
       </div>
 
-      <Button onClick={generate} disabled={loading} className="w-full">
+      <Button onClick={generate} disabled={loading} className="w-full gap-2">
+        <Sparkles size={15} />
         {loading ? 'מייצר...' : `ייצר ${count} כרטיסים`}
       </Button>
 
-      {result && <p className={`text-sm ${result.includes('נוצרו') ? 'text-green-600' : 'text-red-500'}`}>{result}</p>}
+      {result && (
+        <div className={`text-sm px-4 py-3 rounded-lg border ${
+          result.includes('נוצרו')
+            ? 'bg-emerald-950/30 border-emerald-800 text-emerald-400'
+            : 'bg-destructive/10 border-destructive/30 text-destructive'
+        }`}>
+          {result}
+        </div>
+      )}
     </div>
   )
 }
