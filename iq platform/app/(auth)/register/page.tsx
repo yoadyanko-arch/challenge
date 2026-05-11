@@ -22,22 +22,18 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
-    if (signUpError || !data.user) { setError(signUpError?.message ?? 'שגיאה'); setLoading(false); return }
-
-    const { error: profileError } = await supabase.from('users').insert({
-      id: data.user.id,
-      email,
-      username,
+    // Create user + profile via server API (uses service role to bypass RLS)
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, username }),
     })
-    if (profileError) { setError(profileError.message); setLoading(false); return }
+    const data = await res.json()
+    if (!data.ok) { setError(data.error ?? 'שגיאה'); setLoading(false); return }
 
-    await supabase.from('progress').insert([
-      { user_id: data.user.id, pillar: 'think' },
-      { user_id: data.user.id, pillar: 'people' },
-      { user_id: data.user.id, pillar: 'business' },
-      { user_id: data.user.id, pillar: 'self' },
-    ])
+    // Sign in so we have a session
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError) { setError(signInError.message); setLoading(false); return }
 
     router.push('/feed')
     router.refresh()
