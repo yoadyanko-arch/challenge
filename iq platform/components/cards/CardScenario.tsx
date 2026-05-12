@@ -38,9 +38,16 @@ export default function CardScenario({ card, onComplete }: { card: Card; onCompl
         })}
       </div>
       {selected !== null && (
-        <div className="bg-accent rounded-xl p-4 text-sm text-foreground border border-primary/20">
-          {card.explanation}
-        </div>
+        <>
+          <div className="bg-accent rounded-xl p-4 text-sm text-foreground border border-primary/20">
+            {card.explanation}
+          </div>
+          {card.source && (
+            <p className="text-xs text-muted-foreground border-r-2 border-border pr-3">
+              מקור: {card.source}
+            </p>
+          )}
+        </>
       )}
     </CardWrapper>
   )

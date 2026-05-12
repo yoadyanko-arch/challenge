@@ -46,6 +46,7 @@ export function buildPrompt(pillar: Pillar, type: CardType, difficulty: Difficul
 Difficulty: ${difficultyCtx}
 
 ${TYPE_INSTRUCTIONS[type]}
+- "source": a real, specific source the information is based on — a book, research paper, or study (e.g. "Daniel Kahneman, Thinking Fast and Slow (2011)" or "Cialdini, Influence: The Psychology of Persuasion (1984)"). If no specific source applies, use null.
 
 Respond with ONLY a valid JSON object (no markdown, no explanation) with these fields:
 {
@@ -53,6 +54,7 @@ Respond with ONLY a valid JSON object (no markdown, no explanation) with these f
   "content": "...",
   "explanation": "...",
   "options": [...] or null,
-  "correct_answer": "..." or null
+  "correct_answer": "..." or null,
+  "source": "..." or null
 }`
 }

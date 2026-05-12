@@ -10,6 +10,7 @@ export interface GeneratedCard {
   explanation: string
   options: string[] | null
   correct_answer: string | null
+  source: string | null
 }
 
 export async function generateCard(
