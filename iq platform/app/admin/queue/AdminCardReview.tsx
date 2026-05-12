@@ -70,6 +70,11 @@ export default function AdminCardReview({ card }: { card: Card }) {
         <p className="text-xs text-muted-foreground italic leading-relaxed border-r-2 border-primary/30 pr-3">
           {card.explanation}
         </p>
+        {card.source && (
+          <p className="text-xs text-primary/70 font-medium">
+            מקור: {card.source}
+          </p>
+        )}
       </div>
 
       <div className="px-4 pb-4 flex gap-2">
