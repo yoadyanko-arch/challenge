@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutGrid, ListChecks, Settings, ArrowRight } from 'lucide-react'
+import { LayoutGrid, ListChecks, Settings, ArrowRight, Library } from 'lucide-react'
 import { isAdmin } from '@/lib/admin'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -38,6 +38,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           >
             <ListChecks size={13} />
             תור אישור
+          </Link>
+          <Link
+            href="/admin/cards"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Library size={13} />
+            כרטיסים
           </Link>
         </nav>
 
