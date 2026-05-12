@@ -14,7 +14,7 @@ export default async function FeedPage({ searchParams }: { searchParams: Promise
   return (
     <div className="max-w-lg mx-auto">
       <FeedHeader activePillar={pillar ?? 'all'} activeTopic={topic} />
-      <FeedScroller initialCards={cards} pillar={pillar ?? 'all'} />
+      <FeedScroller key={`${pillar ?? 'all'}-${topic ?? ''}`} initialCards={cards} pillar={pillar ?? 'all'} />
     </div>
   )
 }
