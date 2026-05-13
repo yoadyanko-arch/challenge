@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     type,
     difficulty,
     topic: topic ?? null,
-    status: 'pending',
+    status: 'approved',
     xp_reward: XP_VALUES[difficulty],
     ...g,
   }))

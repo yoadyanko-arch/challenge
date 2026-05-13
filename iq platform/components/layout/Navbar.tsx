@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, Trophy, Users, User, Settings } from 'lucide-react'
+import { LayoutGrid, Trophy, Users, User, Settings, BookOpen } from 'lucide-react'
 
 interface NavbarProps {
   isAdmin?: boolean
@@ -9,6 +9,7 @@ interface NavbarProps {
 
 const LINKS = [
   { href: '/feed', icon: LayoutGrid, label: 'פיד' },
+  { href: '/library', icon: BookOpen, label: 'ספרייה' },
   { href: '/leaderboard', icon: Trophy, label: 'דירוג' },
   { href: '/friends', icon: Users, label: 'חברים' },
   { href: '/profile', icon: User, label: 'פרופיל' },

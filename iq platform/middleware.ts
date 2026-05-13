@@ -27,7 +27,8 @@ export async function middleware(request: NextRequest) {
   const isAuthPath = path.startsWith('/login') || path.startsWith('/register')
   const isAdminPath = path.startsWith('/admin')
   const isAppPath = path.startsWith('/feed') || path.startsWith('/profile') ||
-                    path.startsWith('/leaderboard') || path.startsWith('/friends')
+                    path.startsWith('/leaderboard') || path.startsWith('/friends') ||
+                    path.startsWith('/library')
 
   if (!user && (isAppPath || isAdminPath)) {
     return NextResponse.redirect(new URL('/login', request.url))

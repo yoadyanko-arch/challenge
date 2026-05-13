@@ -2,7 +2,7 @@ import { PILLAR_LABELS, type Pillar } from '@/types'
 import { Button } from '@/components/ui/button'
 
 const PILLARS: (Pillar | 'all')[] = ['all', 'think', 'people', 'business', 'self']
-const LABELS: Record<string, string> = { all: 'הכל', ...PILLAR_LABELS }
+const LABELS: Record<string, string> = { all: 'מיקס', ...PILLAR_LABELS }
 
 interface Props {
   active: Pillar | 'all'

@@ -38,7 +38,7 @@ export default function GeneratePage() {
       body: JSON.stringify({ pillar, type, difficulty, topic: topic || undefined, count }),
     })
     const data = await res.json()
-    setResult(data.created ? `נוצרו ${data.created} כרטיסים בהצלחה — עבור לתור לאישור.` : data.error)
+    setResult(data.created ? `נוצרו ${data.created} כרטיסים והועלו ישירות לפיד.` : data.error)
     setLoading(false)
   }
 
