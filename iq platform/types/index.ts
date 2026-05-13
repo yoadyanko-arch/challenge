@@ -15,6 +15,7 @@ export interface Card {
   options: string[] | null
   correct_answer: string | null
   source: string | null
+  question: string | null
   xp_reward: number
   difficulty: Difficulty
   status: CardStatus

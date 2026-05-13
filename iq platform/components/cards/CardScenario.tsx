@@ -20,6 +20,9 @@ export default function CardScenario({ card, onComplete }: { card: Card; onCompl
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={xp} showNext={selected !== null}>
       <p className="text-foreground/80 leading-relaxed text-sm">{card.content}</p>
+      {card.question && (
+        <p className="font-semibold text-sm text-foreground">{card.question}</p>
+      )}
       <div className="space-y-2">
         {options.map((option, i) => {
           let cls = 'w-full text-right p-3 rounded-xl border text-sm transition-all font-medium'

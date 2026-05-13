@@ -14,6 +14,9 @@ export default function CardBias({ card, onComplete }: { card: Card; onComplete:
         <p className="font-semibold text-accent-foreground text-xs uppercase tracking-wide mb-2">הטיה קוגניטיבית</p>
         <p className="text-foreground/80 text-sm">{card.content}</p>
       </div>
+      {card.question && (
+        <p className="font-semibold text-sm text-foreground">{card.question}</p>
+      )}
       {!revealed ? (
         <Button variant="outline" className="w-full" onClick={() => setRevealed(true)}>
           איך להימנע?

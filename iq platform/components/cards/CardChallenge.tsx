@@ -13,7 +13,12 @@ export default function CardChallenge({ card, onComplete }: { card: Card; onComp
 
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={xp} showNext={selected !== null}>
-      <p className="text-foreground/80 font-medium text-sm">{card.content}</p>
+      {card.content && (
+        <p className="text-foreground/80 text-sm leading-relaxed">{card.content}</p>
+      )}
+      {card.question && (
+        <p className="font-semibold text-sm text-foreground">{card.question}</p>
+      )}
       <div className="grid grid-cols-2 gap-2">
         {options.map((option, i) => {
           let cls = 'p-3 rounded-xl border text-sm text-center transition-all font-medium'

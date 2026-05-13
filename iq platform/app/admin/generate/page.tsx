@@ -9,7 +9,7 @@ const CARD_TYPES: { value: CardType; label: string }[] = [
   { value: 'concept', label: 'מושג' },
   { value: 'scenario', label: 'תרחיש' },
   { value: 'challenge', label: 'אתגר' },
-  { value: 'bias', label: 'ביאס' },
+  { value: 'bias', label: 'הטיות' },
 ]
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [

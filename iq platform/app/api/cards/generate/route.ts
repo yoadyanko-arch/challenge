@@ -18,14 +18,20 @@ export async function POST(req: NextRequest) {
 
   const generated = await generateBatch(pillar, type, difficulty, Math.min(count, 20), topic)
 
-  const cards = generated.map(g => ({
+  const cards = generated.map(({ title, content, question, explanation, options, correct_answer, source }) => ({
     pillar,
     type,
     difficulty,
     topic: topic ?? null,
     status: 'approved',
     xp_reward: XP_VALUES[difficulty],
-    ...g,
+    title,
+    content,
+    question: question ?? null,
+    explanation,
+    options,
+    correct_answer,
+    source,
   }))
 
   const service = createServiceClient()

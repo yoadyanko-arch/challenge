@@ -7,6 +7,7 @@ const client = new Anthropic()
 export interface GeneratedCard {
   title: string
   content: string
+  question: string | null
   explanation: string
   options: string[] | null
   correct_answer: string | null

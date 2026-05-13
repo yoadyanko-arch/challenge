@@ -11,6 +11,9 @@ export default function CardConcept({ card, onComplete }: { card: Card; onComple
   return (
     <CardWrapper card={card} onComplete={onComplete} xpEarned={revealed ? XP_VALUES[card.difficulty] : undefined} showNext={revealed}>
       <p className="text-foreground/80 leading-relaxed text-sm">{card.content}</p>
+      {card.question && (
+        <p className="font-semibold text-sm text-foreground">{card.question}</p>
+      )}
       {!revealed ? (
         <Button variant="outline" className="w-full" onClick={() => setRevealed(true)}>
           הצג הסבר
