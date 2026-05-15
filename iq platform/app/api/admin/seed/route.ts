@@ -19,62 +19,90 @@ const TYPE_FOR_LEVEL: CardType[] = [
   'scenario',  // 10
 ]
 
-export async function POST(req: NextRequest) {
-  const authClient = await createClient()
-  const { data: { user } } = await authClient.auth.getUser()
-  if (!isAdmin(user?.email)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+const ALL_PILLARS: Pillar[] = ['think', 'people', 'business', 'self']
 
-  const { pillar } = await req.json() as { pillar: Pillar }
-  const topics = PILLAR_TOPICS[pillar]
-  if (!topics) return NextResponse.json({ error: 'Invalid pillar' }, { status: 400 })
+async function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
-  const service = createServiceClient()
-  let created = 0
-  let failed = 0
-
-  const tasks: (() => Promise<void>)[] = []
-
-  for (const topicObj of topics) {
-    for (let level = 1; level <= 10; level++) {
-      const lvl = level
-      const type = TYPE_FOR_LEVEL[lvl - 1]
-      const difficulty: Difficulty = lvl <= 3 ? 'easy' : lvl <= 7 ? 'medium' : 'hard'
-      const xp_reward = lvl <= 3 ? 10 : lvl <= 7 ? 20 : 30
-
-      tasks.push(async () => {
-        try {
-          const g = await generateCard(pillar, type, lvl, topicObj.value)
-          const { error } = await service.from('cards').insert({
-            pillar,
-            type,
-            difficulty,
-            difficulty_level: lvl,
-            topic: topicObj.value,
-            status: 'approved',
-            xp_reward,
-            title: g.title,
-            content: g.content,
-            question: g.question ?? null,
-            explanation: g.explanation,
-            options: g.options,
-            correct_answer: g.correct_answer,
-            source: g.source,
-          })
-          if (!error) created++
-          else failed++
-        } catch {
-          failed++
-        }
-      })
+async function generateOne(
+  service: ReturnType<typeof import('@/lib/supabase/server').createServiceClient>,
+  pillar: Pillar,
+  topic: string,
+  level: number,
+  attempt = 1
+): Promise<'ok' | 'fail'> {
+  const type = TYPE_FOR_LEVEL[level - 1]
+  const difficulty: Difficulty = level <= 3 ? 'easy' : level <= 7 ? 'medium' : 'hard'
+  const xp_reward = level <= 3 ? 10 : level <= 7 ? 20 : 30
+  try {
+    const g = await generateCard(pillar, type, level, topic)
+    const { error } = await service.from('cards').insert({
+      pillar, type, difficulty, difficulty_level: level, topic,
+      status: 'approved', xp_reward,
+      title: g.title,
+      content: g.content,
+      question: g.question ?? null,
+      explanation: g.explanation,
+      options: g.options,
+      correct_answer: g.correct_answer,
+      source: g.source,
+    })
+    if (error) {
+      if (attempt < 2) { await delay(2000); return generateOne(service, pillar, topic, level, 2) }
+      return 'fail'
     }
+    return 'ok'
+  } catch {
+    if (attempt < 2) { await delay(3000); return generateOne(service, pillar, topic, level, 2) }
+    return 'fail'
   }
+}
 
-  // Run 5 concurrent at a time
-  for (let i = 0; i < tasks.length; i += 5) {
-    await Promise.all(tasks.slice(i, i + 5).map(fn => fn()))
+export async function POST(req: NextRequest) {
+  try {
+    const authClient = await createClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!isAdmin(user?.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await req.json() as { pillar?: Pillar; all?: boolean }
+    const pillarsToRun = body.all ? ALL_PILLARS : body.pillar ? [body.pillar] : []
+    if (pillarsToRun.length === 0) {
+      return NextResponse.json({ error: 'Specify pillar or all:true' }, { status: 400 })
+    }
+
+    const service = createServiceClient()
+    let created = 0
+    let failed = 0
+
+    for (const pillar of pillarsToRun) {
+      const topics = PILLAR_TOPICS[pillar]
+
+      // Build all tasks for this pillar
+      const tasks: (() => Promise<void>)[] = []
+      for (const topicObj of topics) {
+        for (let level = 1; level <= 10; level++) {
+          const lvl = level
+          const t = topicObj.value
+          tasks.push(async () => {
+            const result = await generateOne(service, pillar, t, lvl)
+            if (result === 'ok') created++
+            else failed++
+          })
+        }
+      }
+
+      // Run 3 concurrent (safe rate limit margin)
+      for (let i = 0; i < tasks.length; i += 3) {
+        await Promise.all(tasks.slice(i, i + 3).map(fn => fn()))
+        if (i + 3 < tasks.length) await delay(1500)
+      }
+    }
+
+    return NextResponse.json({ created, failed })
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 })
   }
-
-  return NextResponse.json({ created, failed, total: topics.length * 10 })
 }

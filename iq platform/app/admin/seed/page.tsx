@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { PILLAR_LABELS, type Pillar } from '@/types'
-import { Loader2, CheckCircle2, XCircle, Zap } from 'lucide-react'
+import { Loader2, CheckCircle2, XCircle, Zap, Sparkles } from 'lucide-react'
 
 const PILLARS: { value: Pillar; topics: number }[] = [
   { value: 'think', topics: 5 },
@@ -11,17 +11,20 @@ const PILLARS: { value: Pillar; topics: number }[] = [
   { value: 'self', topics: 4 },
 ]
 
-type Status = 'idle' | 'loading' | 'done' | 'error'
+type PillarStatus = 'idle' | 'loading' | 'done' | 'error'
+
+interface PillarResult { created: number; failed: number }
 
 export default function SeedPage() {
-  const [status, setStatus] = useState<Record<Pillar, Status>>({
+  const [status, setStatus] = useState<Record<Pillar, PillarStatus>>({
     think: 'idle', people: 'idle', business: 'idle', self: 'idle',
   })
-  const [results, setResults] = useState<Record<Pillar, { created: number; failed: number } | null>>({
+  const [results, setResults] = useState<Record<Pillar, PillarResult | null>>({
     think: null, people: null, business: null, self: null,
   })
+  const [runningAll, setRunningAll] = useState(false)
 
-  async function seedPillar(pillar: Pillar) {
+  async function seedPillar(pillar: Pillar): Promise<boolean> {
     setStatus(prev => ({ ...prev, [pillar]: 'loading' }))
     try {
       const res = await fetch('/api/admin/seed', {
@@ -33,76 +36,106 @@ export default function SeedPage() {
       if (data.error) throw new Error(data.error)
       setResults(prev => ({ ...prev, [pillar]: { created: data.created, failed: data.failed } }))
       setStatus(prev => ({ ...prev, [pillar]: 'done' }))
-    } catch {
+      return true
+    } catch (e) {
       setStatus(prev => ({ ...prev, [pillar]: 'error' }))
+      return false
     }
   }
+
+  async function seedAll() {
+    setRunningAll(true)
+    for (const { value } of PILLARS) {
+      if (status[value] === 'done') continue
+      await seedPillar(value)
+    }
+    setRunningAll(false)
+  }
+
+  const totalCreated = Object.values(results).reduce((s, r) => s + (r?.created ?? 0), 0)
+  const anyDone = Object.values(status).some(s => s === 'done')
+  const allDone = PILLARS.every(p => status[p.value] === 'done')
+  const anyLoading = Object.values(status).some(s => s === 'loading') || runningAll
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-bold tracking-tight">ייצור תוכן מסיבי</h1>
+        <h1 className="text-lg font-bold tracking-tight">ייצור מסיבי</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          מייצר 10 כרטיסים (רמות 1–10) לכל תת-נושא. לחץ על כל תחום בנפרד וחכה לסיום לפני הבא.
+          10 כרטיסים לכל תת-נושא (רמות קושי 1–10) — סה&quot;כ 220 כרטיסים
         </p>
       </div>
 
-      <div className="space-y-3">
+      {/* One-click generate all */}
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-sm">ייצר הכל בלחיצה אחת</p>
+            <p className="text-xs text-muted-foreground mt-0.5">מריץ את כל 4 התחומים ברצף. לוקח ~4–6 דקות.</p>
+          </div>
+          <Button
+            onClick={seedAll}
+            disabled={anyLoading || allDone}
+            className="shrink-0 gap-1.5"
+          >
+            {anyLoading && runningAll
+              ? <><Loader2 size={14} className="animate-spin" />מייצר...</>
+              : allDone
+              ? <><CheckCircle2 size={14} />הושלם</>
+              : <><Sparkles size={14} />ייצר הכל</>
+            }
+          </Button>
+        </div>
+        {anyDone && (
+          <p className="text-xs text-emerald-400 font-medium">
+            {totalCreated} כרטיסים נוצרו עד כה
+          </p>
+        )}
+      </div>
+
+      {/* Per-pillar status */}
+      <div className="space-y-2">
         {PILLARS.map(({ value, topics }) => {
           const s = status[value]
           const r = results[value]
-          const total = topics * 10
-
           return (
-            <div key={value} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  {s === 'done' && <CheckCircle2 size={15} className="text-emerald-400" />}
-                  {s === 'error' && <XCircle size={15} className="text-destructive" />}
-                  {s === 'loading' && <Loader2 size={15} className="animate-spin text-primary" />}
-                  <p className="font-semibold">{PILLAR_LABELS[value]}</p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {topics} נושאים × 10 רמות = {total} כרטיסים
-                </p>
-                {r && (
-                  <p className="text-xs mt-1 font-medium text-emerald-400">
-                    {r.created} נוצרו{r.failed > 0 ? `, ${r.failed} נכשלו` : ' בהצלחה'}
-                  </p>
-                )}
-                {s === 'error' && (
-                  <p className="text-xs text-destructive mt-1">שגיאה — נסה שוב</p>
-                )}
-                {s === 'loading' && (
-                  <p className="text-xs text-muted-foreground mt-1 animate-pulse">מייצר... זה יכול לקחת כ-{Math.ceil(topics * 10 / 5 * 4)} שניות</p>
-                )}
+            <div key={value} className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                {s === 'done' && <CheckCircle2 size={15} className="text-emerald-400" />}
+                {s === 'error' && <XCircle size={15} className="text-destructive" />}
+                {s === 'loading' && <Loader2 size={15} className="animate-spin text-primary" />}
+                {s === 'idle' && <span className="text-xs text-muted-foreground font-mono">{topics * 10}</span>}
               </div>
-
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">{PILLAR_LABELS[value]}</p>
+                <p className="text-xs text-muted-foreground">
+                  {s === 'idle' && `${topics} נושאים × 10 רמות`}
+                  {s === 'loading' && <span className="animate-pulse">מייצר כרטיסים...</span>}
+                  {s === 'done' && r && <span className="text-emerald-400">{r.created} כרטיסים נוצרו{r.failed > 0 ? `, ${r.failed} נכשלו` : ''}</span>}
+                  {s === 'error' && <span className="text-destructive">שגיאה — לחץ ייצר שוב</span>}
+                </p>
+              </div>
               <Button
-                onClick={() => seedPillar(value)}
-                disabled={s === 'loading' || s === 'done'}
-                variant={s === 'done' ? 'outline' : 'default'}
-                className="shrink-0 gap-1.5"
                 size="sm"
+                variant={s === 'done' ? 'outline' : 'default'}
+                onClick={() => seedPillar(value)}
+                disabled={anyLoading || s === 'done'}
+                className="shrink-0 gap-1.5 h-8"
               >
-                {s === 'loading' ? (
-                  <><Loader2 size={13} className="animate-spin" />מייצר...</>
-                ) : s === 'done' ? (
-                  'הושלם'
-                ) : (
-                  <><Zap size={13} />{s === 'error' ? 'נסה שוב' : 'ייצר'}</>
-                )}
+                {s === 'loading'
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Zap size={12} />
+                }
+                {s === 'loading' ? '' : s === 'done' ? 'הושלם' : s === 'error' ? 'שוב' : 'ייצר'}
               </Button>
             </div>
           )
         })}
       </div>
 
-      <div className="bg-muted/50 rounded-xl p-4 text-xs text-muted-foreground space-y-1">
-        <p>אל תסגור את הדף בזמן הייצור.</p>
-        <p>כרטיסים שנוצרו מופיעים מיד בפיד.</p>
-        <p>ניתן לייצר שוב — יוסיף כרטיסים חדשים מבלי למחוק הישנים.</p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        אל תסגור את הדף בזמן הייצור. ניתן לייצר שוב בכל עת — כרטיסים חדשים יתווספו לקיימים.
+      </p>
     </div>
   )
 }
