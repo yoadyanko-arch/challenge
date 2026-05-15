@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await req.json() as { pillar?: Pillar; all?: boolean }
+    const body = await req.json() as { pillar?: Pillar; all?: boolean; topic?: string }
     const pillarsToRun = body.all ? ALL_PILLARS : body.pillar ? [body.pillar] : []
     if (pillarsToRun.length === 0) {
       return NextResponse.json({ error: 'Specify pillar or all:true' }, { status: 400 })
@@ -78,7 +78,10 @@ export async function POST(req: NextRequest) {
     let failed = 0
 
     for (const pillar of pillarsToRun) {
-      const topics = PILLAR_TOPICS[pillar]
+      const allTopics = PILLAR_TOPICS[pillar]
+      const topics = body.topic
+        ? allTopics.filter(t => t.value === body.topic)
+        : allTopics
 
       // Build all tasks for this pillar
       const tasks: (() => Promise<void>)[] = []

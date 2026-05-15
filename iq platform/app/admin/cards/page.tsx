@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
-import AdminCardList from './AdminCardList'
+import AdminCardsTree from './AdminCardsTree'
 import type { Card } from '@/types'
 
 export default async function CardsPage() {
@@ -8,15 +8,17 @@ export default async function CardsPage() {
     .from('cards')
     .select('*')
     .eq('status', 'approved')
-    .order('created_at', { ascending: false })
+    .order('difficulty_level', { ascending: true })
+
+  const total = cards?.length ?? 0
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-bold tracking-tight">כרטיסים מאושרים</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{cards?.length ?? 0} כרטיסים פעילים בפיד</p>
+        <p className="text-sm text-muted-foreground mt-0.5">{total} כרטיסים פעילים — מסודרים לפי נושא</p>
       </div>
-      <AdminCardList initialCards={(cards ?? []) as Card[]} />
+      <AdminCardsTree initialCards={(cards ?? []) as Card[]} />
     </div>
   )
 }

@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { PILLAR_LABELS, type Pillar } from '@/types'
-import { Loader2, CheckCircle2, XCircle, Zap, Sparkles } from 'lucide-react'
+import { PILLAR_LABELS, PILLAR_TOPICS, type Pillar } from '@/types'
+import { Loader2, CheckCircle2, XCircle, Zap, Sparkles, Target } from 'lucide-react'
 
 const PILLARS: { value: Pillar; topics: number }[] = [
   { value: 'think', topics: 5 },
@@ -24,6 +24,13 @@ export default function SeedPage() {
   })
   const [runningAll, setRunningAll] = useState(false)
 
+  // Focused generation state
+  const [focusPillar, setFocusPillar] = useState<Pillar>('think')
+  const [focusTopic, setFocusTopic] = useState<string>(PILLAR_TOPICS['think'][0].value)
+  const [focusLoading, setFocusLoading] = useState(false)
+  const [focusResult, setFocusResult] = useState<PillarResult | null>(null)
+  const [focusError, setFocusError] = useState<string | null>(null)
+
   async function seedPillar(pillar: Pillar): Promise<boolean> {
     setStatus(prev => ({ ...prev, [pillar]: 'loading' }))
     try {
@@ -37,7 +44,7 @@ export default function SeedPage() {
       setResults(prev => ({ ...prev, [pillar]: { created: data.created, failed: data.failed } }))
       setStatus(prev => ({ ...prev, [pillar]: 'done' }))
       return true
-    } catch (e) {
+    } catch {
       setStatus(prev => ({ ...prev, [pillar]: 'error' }))
       return false
     }
@@ -52,10 +59,38 @@ export default function SeedPage() {
     setRunningAll(false)
   }
 
+  async function seedFocused() {
+    setFocusLoading(true)
+    setFocusResult(null)
+    setFocusError(null)
+    try {
+      const res = await fetch('/api/admin/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pillar: focusPillar, topic: focusTopic }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setFocusResult({ created: data.created, failed: data.failed })
+    } catch (e) {
+      setFocusError(e instanceof Error ? e.message : 'שגיאה')
+    }
+    setFocusLoading(false)
+  }
+
   const totalCreated = Object.values(results).reduce((s, r) => s + (r?.created ?? 0), 0)
   const anyDone = Object.values(status).some(s => s === 'done')
   const allDone = PILLARS.every(p => status[p.value] === 'done')
   const anyLoading = Object.values(status).some(s => s === 'loading') || runningAll
+
+  const focusTopics = PILLAR_TOPICS[focusPillar]
+
+  function handleFocusPillarChange(p: Pillar) {
+    setFocusPillar(p)
+    setFocusTopic(PILLAR_TOPICS[p][0].value)
+    setFocusResult(null)
+    setFocusError(null)
+  }
 
   return (
     <div className="space-y-6">
@@ -131,6 +166,69 @@ export default function SeedPage() {
             </div>
           )
         })}
+      </div>
+
+      {/* Focused generation */}
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Target size={15} className="text-primary" />
+          <p className="font-semibold text-sm">ייצור ממוקד לתת-נושא</p>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-2">
+          ייצר 10 כרטיסים (רמות 1–10) לנושא ספציפי. מתאים לחיזוק נושא שנכשל או לחידוש.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3" dir="rtl">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">תחום</label>
+            <select
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm"
+              value={focusPillar}
+              onChange={e => handleFocusPillarChange(e.target.value as Pillar)}
+              disabled={focusLoading}
+            >
+              {PILLARS.map(p => (
+                <option key={p.value} value={p.value}>{PILLAR_LABELS[p.value]}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">נושא</label>
+            <select
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm"
+              value={focusTopic}
+              onChange={e => { setFocusTopic(e.target.value); setFocusResult(null); setFocusError(null) }}
+              disabled={focusLoading}
+            >
+              {focusTopics.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={seedFocused}
+            disabled={focusLoading}
+            size="sm"
+            className="gap-1.5"
+          >
+            {focusLoading
+              ? <><Loader2 size={13} className="animate-spin" />מייצר...</>
+              : <><Zap size={13} />ייצר 10 כרטיסים</>
+            }
+          </Button>
+          {focusResult && (
+            <p className="text-xs text-emerald-400 font-medium">
+              <CheckCircle2 size={12} className="inline ml-1" />
+              {focusResult.created} נוצרו{focusResult.failed > 0 ? `, ${focusResult.failed} נכשלו` : ''}
+            </p>
+          )}
+          {focusError && (
+            <p className="text-xs text-destructive">{focusError}</p>
+          )}
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground">
