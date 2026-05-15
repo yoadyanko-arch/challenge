@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { Pillar } from '@/types'
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
@@ -8,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const url = new URL(req.url)
-  const pillar = url.searchParams.get('pillar') as Pillar | null
+  const pillar = url.searchParams.get('pillar')
   const topic = url.searchParams.get('topic') || null
 
   let query = supabase
