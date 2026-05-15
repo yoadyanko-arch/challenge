@@ -34,7 +34,7 @@ async function generateOne(
 ): Promise<'ok' | 'fail'> {
   const type = TYPE_FOR_LEVEL[level - 1]
   const difficulty: Difficulty = level <= 3 ? 'easy' : level <= 7 ? 'medium' : 'hard'
-  const xp_reward = level <= 3 ? 10 : level <= 7 ? 20 : 30
+  const xp_reward = level * 10
   try {
     const g = await generateCard(pillar, type, level, topic)
     const { error } = await service.from('cards').insert({

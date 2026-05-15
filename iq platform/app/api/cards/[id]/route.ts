@@ -19,7 +19,7 @@ export async function PATCH(
   if (typeof updates.difficulty_level === 'number') {
     const lvl = updates.difficulty_level
     updates.difficulty = (lvl <= 3 ? 'easy' : lvl <= 7 ? 'medium' : 'hard') as Difficulty
-    updates.xp_reward = lvl <= 3 ? 10 : lvl <= 7 ? 20 : 30
+    updates.xp_reward = lvl * 10
   }
 
   const service = createServiceClient()

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   const difficulty: Difficulty =
     difficulty_level <= 3 ? 'easy' : difficulty_level <= 7 ? 'medium' : 'hard'
-  const xp_reward = difficulty_level <= 3 ? 10 : difficulty_level <= 7 ? 20 : 30
+  const xp_reward = difficulty_level * 10
 
   const generated = await generateBatch(pillar, type, difficulty_level, Math.min(count, 20), topic)
 
