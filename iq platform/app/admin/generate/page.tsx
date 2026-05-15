@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { PILLAR_LABELS, PILLAR_TOPICS, type Pillar, type CardType, type Difficulty } from '@/types'
+import { PILLAR_LABELS, PILLAR_TOPICS, type Pillar, type CardType } from '@/types'
 import { Sparkles } from 'lucide-react'
 
 const CARD_TYPES: { value: CardType; label: string }[] = [
@@ -12,22 +12,17 @@ const CARD_TYPES: { value: CardType; label: string }[] = [
   { value: 'bias', label: 'הטיות' },
 ]
 
-const DIFFICULTIES: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'קל' },
-  { value: 'medium', label: 'בינוני' },
-  { value: 'hard', label: 'קשה' },
-]
-
 export default function GeneratePage() {
   const [pillar, setPillar] = useState<Pillar>('think')
   const [type, setType] = useState<CardType>('concept')
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium')
+  const [difficultyLevel, setDifficultyLevel] = useState(5)
   const [topic, setTopic] = useState<string>('')
   const [count, setCount] = useState(5)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
 
   const topics = PILLAR_TOPICS[pillar]
+  const diffLabel = difficultyLevel <= 3 ? 'קל' : difficultyLevel <= 7 ? 'בינוני' : 'קשה'
 
   async function generate() {
     setLoading(true)
@@ -35,10 +30,10 @@ export default function GeneratePage() {
     const res = await fetch('/api/cards/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pillar, type, difficulty, topic: topic || undefined, count }),
+      body: JSON.stringify({ pillar, type, difficulty_level: difficultyLevel, topic: topic || undefined, count }),
     })
     const data = await res.json()
-    setResult(data.created ? `נוצרו ${data.created} כרטיסים והועלו ישירות לפיד.` : data.error)
+    setResult(data.created ? `נוצרו ${data.created} כרטיסים ברמה ${difficultyLevel}.` : data.error)
     setLoading(false)
   }
 
@@ -79,12 +74,6 @@ export default function GeneratePage() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">קושי</Label>
-            <select className={selectCls} value={difficulty} onChange={e => setDifficulty(e.target.value as Difficulty)}>
-              {DIFFICULTIES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">כמות (מקס׳ 20)</Label>
             <input
               type="number"
@@ -96,11 +85,30 @@ export default function GeneratePage() {
             />
           </div>
         </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">
+            רמת קושי: {difficultyLevel}/10 — {diffLabel}
+          </Label>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={difficultyLevel}
+            onChange={e => setDifficultyLevel(Number(e.target.value))}
+            className="w-full accent-amber-500"
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>1 — קל מאוד</span>
+            <span>5 — בינוני</span>
+            <span>10 — מומחה</span>
+          </div>
+        </div>
       </div>
 
       <Button onClick={generate} disabled={loading} className="w-full gap-2">
         <Sparkles size={15} />
-        {loading ? 'מייצר...' : `ייצר ${count} כרטיסים`}
+        {loading ? 'מייצר...' : `ייצר ${count} כרטיסים (רמה ${difficultyLevel})`}
       </Button>
 
       {result && (

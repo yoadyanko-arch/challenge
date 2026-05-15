@@ -18,8 +18,33 @@ export interface Card {
   question: string | null
   xp_reward: number
   difficulty: Difficulty
+  difficulty_level: number | null
   status: CardStatus
   created_at: string
+}
+
+export interface StoredCardResult {
+  card_id: string
+  card_title: string
+  card_question: string | null
+  was_correct: boolean | null
+  user_answer: string | null
+  correct_answer: string | null
+  explanation: string
+  xp_earned: number
+  time_spent: number
+  difficulty_level: number | null
+  pillar: string
+}
+
+export interface LearnedSession {
+  id: string
+  user_id: string
+  pillar: string
+  topic: string | null
+  score: number
+  cards_data: StoredCardResult[]
+  completed_at: string
 }
 
 export const PILLAR_TOPICS: Record<Pillar, { value: string; label: string }[]> = {
