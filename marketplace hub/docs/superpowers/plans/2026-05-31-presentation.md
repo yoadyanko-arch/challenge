@@ -1,0 +1,1062 @@
+# Marketplace Hub Presentation — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build `Marketplace_Hub_Presentation_v1.html` — a 13-slide, 16:9 HTML presentation unifying all one-pager content, with 3 gate slides, keyboard + button navigation, and reused SVG illustrations.
+
+**Architecture:** Single HTML file. All slides are `<div class="slide">` elements inside a `.deck`. CSS toggles `.active` to show one at a time. ~25 lines of vanilla JS handle keyboard and button navigation. All CSS is embedded in `<style>`. No build step.
+
+**Tech Stack:** HTML5, CSS3, vanilla JavaScript, Google Fonts (Rubik). No dependencies.
+
+---
+
+## File Structure
+
+| File | Action | Responsibility |
+|------|--------|---------------|
+| `Marketplace_Hub_Presentation_v1.html` | Create | Complete presentation — all 13 slides, CSS, JS |
+
+---
+
+### Task 1: Base scaffold — HTML shell, shared CSS, navigation JS
+
+**Files:**
+- Create: `Marketplace_Hub_Presentation_v1.html`
+
+- [ ] **Step 1: Create the file with HTML shell, shared CSS tokens, and navigation**
+
+```html
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Marketplace Hub — Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ── */
+:root {
+  --burg:#8B1C3C; --burg-deep:#5E1228; --rose:#C2305A;
+  --cream:#F5EDE8; --bg:#F9F5F1; --card:#FFFFFF;
+  --text:#160810; --mid:#4A253A; --muted:#8A6070; --border:#E0CCC4;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:'Rubik',sans-serif; direction:rtl;
+  background:#D6CBC3; min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+
+/* ── Deck / Slide ── */
+.deck { position:relative; width:1280px; height:720px; box-shadow:0 12px 80px rgba(0,0,0,.28); }
+.slide {
+  position:absolute; inset:0; width:1280px; height:720px;
+  display:none; flex-direction:column;
+  background:var(--bg); overflow:hidden;
+}
+.slide.active { display:flex; }
+
+/* ── Top accent bar (shared) ── */
+.top-bar {
+  height:5px; flex-shrink:0;
+  background:linear-gradient(90deg,var(--burg-deep),var(--rose) 50%,var(--burg-deep));
+}
+
+/* ── Slide header (shared) ── */
+.slide-header {
+  flex-shrink:0; height:54px; padding:0 48px;
+  display:flex; align-items:center;
+  border-bottom:1.5px solid var(--border); background:var(--card);
+}
+.logo-badge { background:var(--burg); border-radius:6px; padding:5px 11px; flex-shrink:0; }
+.logo-badge img { height:19px; display:block; }
+.hd { width:1.5px; height:28px; background:var(--border); margin:0 20px; flex-shrink:0; }
+.hc { flex:1; }
+.ht { font-size:1.1rem; font-weight:900; color:var(--text); line-height:1; }
+.ht em { color:var(--burg); font-style:normal; }
+.hs { font-size:.56rem; color:var(--muted); margin-top:3px; letter-spacing:.1em; }
+.hp {
+  flex-shrink:0; background:var(--cream); border:1px solid var(--border);
+  border-radius:20px; padding:5px 14px; font-size:.52rem;
+  font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--burg);
+}
+
+/* ── Gate slides ── */
+.slide.gate { background:var(--burg-deep); align-items:center; justify-content:center; }
+.gate-glow {
+  position:absolute; width:700px; height:700px; border-radius:50%;
+  background:radial-gradient(circle,rgba(194,48,90,.1) 0%,transparent 65%);
+  top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none;
+}
+.gate-inner { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
+.gate-title { font-size:3.8rem; font-weight:900; color:white; line-height:1; letter-spacing:-.02em; text-align:center; }
+.gate-title em { color:var(--rose); font-style:normal; }
+.gate-sub { font-size:.8rem; color:rgba(245,237,232,.55); margin-top:10px; letter-spacing:.15em; text-transform:uppercase; }
+.gate-line { width:72px; height:3px; background:var(--rose); border-radius:2px; margin-top:18px; }
+
+/* ── Content area (shared) ── */
+.slide-content {
+  flex:1; padding:22px 48px; display:flex; flex-direction:column; gap:14px; overflow:hidden;
+}
+.sec-lbl {
+  flex-shrink:0; font-size:.52rem; font-weight:700; letter-spacing:.28em;
+  text-transform:uppercase; color:var(--rose);
+  display:flex; align-items:center; gap:7px;
+}
+.sec-lbl::before { content:''; width:16px; height:1.5px; background:var(--rose); border-radius:1px; }
+
+/* ── Navigation buttons ── */
+.nav-btn {
+  position:fixed; bottom:26px; width:38px; height:38px;
+  border-radius:50%; border:none; cursor:pointer;
+  background:rgba(94,18,40,.8); color:white;
+  font-size:1.3rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s, opacity .15s; z-index:200;
+  user-select:none;
+}
+.nav-btn:hover { background:var(--burg); }
+.nav-btn.prev { right:calc(50% + 176px); }
+.nav-btn.next { left:calc(50% + 176px); }
+.slide-counter {
+  position:fixed; bottom:31px; left:50%; transform:translateX(-50%);
+  font-size:.58rem; color:var(--muted); letter-spacing:.1em; z-index:200;
+  font-family:'Rubik',sans-serif;
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+  <!-- slides added in Tasks 2–5 -->
+</div>
+
+<button class="nav-btn prev" id="prevBtn">&#8249;</button>
+<button class="nav-btn next" id="nextBtn">&#8250;</button>
+<div class="slide-counter"><span id="curSlide">1</span> / <span id="totSlide">13</span></div>
+
+<script>
+(function () {
+  const slides = document.querySelectorAll('.slide');
+  const curEl  = document.getElementById('curSlide');
+  const totEl  = document.getElementById('totSlide');
+  const ctr    = document.querySelector('.slide-counter');
+  const prev   = document.getElementById('prevBtn');
+  const next   = document.getElementById('nextBtn');
+  let idx = 0;
+  totEl.textContent = slides.length;
+
+  function goTo(n) {
+    if (slides.length === 0) return;
+    slides[idx].classList.remove('active');
+    idx = Math.max(0, Math.min(n, slides.length - 1));
+    slides[idx].classList.add('active');
+    curEl.textContent = idx + 1;
+    const isGate = slides[idx].classList.contains('gate');
+    ctr.style.color = isGate ? 'rgba(245,237,232,.35)' : '';
+    prev.style.opacity = idx === 0 ? '.3' : '1';
+    next.style.opacity = idx === slides.length - 1 ? '.3' : '1';
+  }
+
+  prev.addEventListener('click', () => goTo(idx - 1));
+  next.addEventListener('click', () => goTo(idx + 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(idx + 1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(idx - 1);
+  });
+
+  if (slides.length > 0) goTo(0);
+})();
+</script>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Open in browser, verify**
+Open `Marketplace_Hub_Presentation_v1.html`. Should see: tan background, two circular nav buttons at bottom-center, counter "1 / 13". No slide content yet.
+
+- [ ] **Step 3: Commit**
+```bash
+git add "marketplace hub/Marketplace_Hub_Presentation_v1.html"
+git commit -m "Add presentation scaffold: deck, CSS tokens, navigation JS"
+```
+
+---
+
+### Task 2: Gate slides (1, 5, 10)
+
+**Files:**
+- Modify: `Marketplace_Hub_Presentation_v1.html` — add 3 slides inside `<div class="deck">`
+
+- [ ] **Step 1: Replace the `<!-- slides added in Tasks 2–5 -->` comment with the 3 gate slides**
+
+```html
+  <!-- ── GATE 1 ── -->
+  <div class="slide gate">
+    <div class="gate-glow"></div>
+    <div class="gate-inner">
+      <div class="gate-title"><em>Marketplace</em> Hub</div>
+      <div class="gate-sub">האקוסיסטם המרכזי לצמיחת מותגים</div>
+      <div class="gate-line"></div>
+    </div>
+  </div>
+
+  <!-- content slides 2–4 go here -->
+
+  <!-- ── GATE 2 ── -->
+  <div class="slide gate">
+    <div class="gate-glow"></div>
+    <div class="gate-inner">
+      <div class="gate-title">מודל כלכלי</div>
+      <div class="gate-sub">ארבעה מקורות הכנסה משלימים</div>
+      <div class="gate-line"></div>
+    </div>
+  </div>
+
+  <!-- content slides 6–9 go here -->
+
+  <!-- ── GATE 3 ── -->
+  <div class="slide gate">
+    <div class="gate-glow"></div>
+    <div class="gate-inner">
+      <div class="gate-title">תוכנית פעולה</div>
+      <div class="gate-sub">6 שלבים מ-Validation ועד Scale</div>
+      <div class="gate-line"></div>
+    </div>
+  </div>
+
+  <!-- content slides 11–13 go here -->
+```
+
+- [ ] **Step 2: Verify in browser**
+Counter should show "1 / 3". Arrow keys navigate between 3 dark gate slides. Each shows its title + subtitle + rose line centered on dark background.
+
+- [ ] **Step 3: Commit**
+```bash
+git add "marketplace hub/Marketplace_Hub_Presentation_v1.html"
+git commit -m "Add 3 gate slides: Marketplace Hub, מודל כלכלי, תוכנית פעולה"
+```
+
+---
+
+### Task 3: General slides (2, 3, 4)
+
+**Files:**
+- Modify: `Marketplace_Hub_Presentation_v1.html` — add CSS + 3 slides
+
+- [ ] **Step 1: Add general-section CSS inside `<style>` before `</style>`**
+
+```css
+/* ── Vision ── */
+.vision-box {
+  background:var(--burg-deep); border-radius:10px; padding:24px 32px;
+  flex:1; display:flex; flex-direction:column; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.vision-box::before {
+  content:''; position:absolute; width:500px; height:500px; border-radius:50%;
+  background:radial-gradient(circle,rgba(194,48,90,.13) 0%,transparent 65%);
+  top:-220px; left:-80px; pointer-events:none;
+}
+.vision-text { font-size:1.12rem; font-weight:600; color:white; line-height:1.68; position:relative; z-index:1; }
+
+/* ── Two-col (problem / solution) ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:32px; flex:1; }
+.col-block { display:flex; flex-direction:column; gap:10px; }
+.blist { display:flex; flex-direction:column; gap:8px; }
+.bi { display:flex; align-items:flex-start; gap:10px; font-size:.8rem; color:var(--mid); line-height:1.48; }
+.bd { width:6px; height:6px; border-radius:50%; background:var(--rose); flex-shrink:0; margin-top:5px; }
+
+/* ── Ecosystem ── */
+.eco-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.eco-card {
+  background:var(--card); border:1px solid var(--border); border-radius:9px;
+  padding:14px; display:flex; flex-direction:column; border-top:3px solid var(--burg);
+}
+.eco-name { font-size:.82rem; font-weight:900; color:var(--burg); margin-bottom:5px; }
+.eco-desc { font-size:.66rem; color:var(--muted); line-height:1.42; }
+
+/* ── Services ── */
+.svc-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; flex:1; }
+.svc-pill { background:var(--cream); border-radius:8px; padding:11px 13px; display:flex; flex-direction:column; gap:6px; }
+.svc-header { display:flex; align-items:center; gap:8px; }
+.svc-icon { width:24px; height:24px; border-radius:50%; background:var(--burg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.svc-icon svg { width:12px; height:12px; }
+.svc-name { font-size:.72rem; font-weight:700; color:var(--text); line-height:1.3; }
+.svc-badge { margin-right:auto; font-size:.44rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--burg); background:white; border:1px solid var(--border); border-radius:10px; padding:2px 7px; }
+.svc-desc { font-size:.63rem; color:var(--muted); line-height:1.4; }
+```
+
+- [ ] **Step 2: Add 3 general slides in place of `<!-- content slides 2–4 go here -->`**
+
+```html
+  <!-- ── SLIDE 2: Vision ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — חזון</div>
+        <div class="hs">האקוסיסטם המרכזי לצמיחת מותגים ישראלים בתחילת הדרך</div>
+      </div>
+      <div class="hp">כללי</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">חזון</div>
+      <div class="vision-box">
+        <div class="vision-text">להפוך לבית ולאקוסיסטם הצמיחה המרכזי עבור הדור הבא של המותגים בתחילת הדרך בישראל — מעטפת שלמה של כלים, חיבורים, הזדמנויות ותמיכה תחת קורת גג אחת.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3: Problem + Solution ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — בעיה ופתרון</div>
+        <div class="hs">האקוסיסטם המרכזי לצמיחת מותגים ישראלים בתחילת הדרך</div>
+      </div>
+      <div class="hp">כללי</div>
+    </div>
+    <div class="slide-content">
+      <div class="two-col">
+        <div class="col-block">
+          <div class="sec-lbl">הבעיה</div>
+          <div class="blist">
+            <div class="bi"><div class="bd"></div>חוסר בליווי מקצועי וספקים אמינים</div>
+            <div class="bi"><div class="bd"></div>היעדר קהילה עסקית וחשיפה אפקטיבית</div>
+            <div class="bi"><div class="bd"></div>גישה מוגבלת לריטייל ושיתופי פעולה</div>
+            <div class="bi"><div class="bd"></div>אין גוף אחד שמרכז את כל המעטפת הזו</div>
+          </div>
+        </div>
+        <div class="col-block">
+          <div class="sec-lbl">הפתרון</div>
+          <div class="blist">
+            <div class="bi"><div class="bd"></div>מעטפת צמיחה מלאה תחת אקוסיסטם אחד</div>
+            <div class="bi"><div class="bd"></div>חיבור לשירותים, קהילה והזדמנויות</div>
+            <div class="bi"><div class="bd"></div>תשתית עסקית שמאחורי כל מותג צומח</div>
+            <div class="bi"><div class="bd"></div>רשת שותפים נבחרת עם סטנדרט גבוה</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4: Ecosystem + Services ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — אקוסיסטם ושירותים</div>
+        <div class="hs">האקוסיסטם המרכזי לצמיחת מותגים ישראלים בתחילת הדרך</div>
+      </div>
+      <div class="hp">כללי</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">מבנה האקוסיסטם</div>
+      <div class="eco-grid">
+        <div class="eco-card"><div class="eco-name">Marketplace</div><div class="eco-desc">שכבת החשיפה — ירידים, פופ-אפים, אירועים ובניית קהל</div></div>
+        <div class="eco-card"><div class="eco-name">Hub</div><div class="eco-desc">שכבת הצמיחה — ליווי, שירותים, חיבור להזדמנויות עסקיות</div></div>
+        <div class="eco-card"><div class="eco-name">Partners</div><div class="eco-desc">רשת מקצועיים נבחרת — עו״ד, רו״ח, שיווק, עיצוב ועוד</div></div>
+        <div class="eco-card"><div class="eco-name">Brands</div><div class="eco-desc">מותגים בתחילת הדרך המשתמשים באקוסיסטם לצמיחה</div></div>
+      </div>
+      <div class="sec-lbl">סוגי שירותים</div>
+      <div class="svc-row">
+        <div class="svc-pill">
+          <div class="svc-header">
+            <div class="svc-icon"><svg viewBox="0 0 12 12" fill="none"><path d="M6 2L7.5 5H10.5L8 7L9 10L6 8.5L3 10L4 7L1.5 5H4.5L6 2Z" stroke="white" stroke-width="1" stroke-linejoin="round"/></svg></div>
+            <div class="svc-name">חשיפה וצמיחה</div>
+            <div class="svc-badge">Marketplace</div>
+          </div>
+          <div class="svc-desc">ירידים, פופ-אפים, שיתופי פעולה וחשיפת מותגים בתוך הקהילה</div>
+        </div>
+        <div class="svc-pill">
+          <div class="svc-header">
+            <div class="svc-icon"><svg viewBox="0 0 12 12" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" stroke="white" stroke-width="1.2"/><line x1="4" y1="5" x2="8" y2="5" stroke="white" stroke-width="1"/><line x1="4" y1="7" x2="7" y2="7" stroke="white" stroke-width="1"/></svg></div>
+            <div class="svc-name">עסקי ומשפטי</div>
+            <div class="svc-badge">Hub</div>
+          </div>
+          <div class="svc-desc">ליווי עסקי, שירותים משפטיים, הנהלת חשבונות והקמת עסק</div>
+        </div>
+        <div class="svc-pill">
+          <div class="svc-header">
+            <div class="svc-icon"><svg viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="3.5" stroke="white" stroke-width="1.2"/><line x1="6" y1="1" x2="6" y2="3" stroke="white" stroke-width="1"/><line x1="6" y1="9" x2="6" y2="11" stroke="white" stroke-width="1"/></svg></div>
+            <div class="svc-name">שיווק ומיתוג</div>
+            <div class="svc-badge">Hub</div>
+          </div>
+          <div class="svc-desc">אסטרטגיית סושיאל, יצירת תוכן, מיתוג, צילום וקידום דיגיטלי</div>
+        </div>
+        <div class="svc-pill">
+          <div class="svc-header">
+            <div class="svc-icon"><svg viewBox="0 0 12 12" fill="none"><rect x="1.5" y="1.5" width="9" height="7" rx="1" stroke="white" stroke-width="1.1"/><line x1="3" y1="10.5" x2="9" y2="10.5" stroke="white" stroke-width="1"/><line x1="6" y1="8.5" x2="6" y2="10.5" stroke="white" stroke-width="1"/></svg></div>
+            <div class="svc-name">טכנולוגיה</div>
+            <div class="svc-badge">Hub</div>
+          </div>
+          <div class="svc-desc">דאשבורד נתונים ובניית אתר מקצועי לצמיחה דיגיטלית</div>
+        </div>
+        <div class="svc-pill">
+          <div class="svc-header">
+            <div class="svc-icon"><svg viewBox="0 0 12 12" fill="none"><rect x="1.5" y="3.5" width="9" height="6" rx="1" stroke="white" stroke-width="1.2"/><line x1="4" y1="3.5" x2="4" y2="1.5" stroke="white" stroke-width="1"/><line x1="8" y1="3.5" x2="8" y2="1.5" stroke="white" stroke-width="1"/></svg></div>
+            <div class="svc-name">גישה לריטייל</div>
+            <div class="svc-badge">Hub</div>
+          </div>
+          <div class="svc-desc">פופ-אפים, חיבורים לחנויות, מיקומים מסחריים והזדמנויות מכירה</div>
+        </div>
+        <div class="svc-pill">
+          <div class="svc-header">
+            <div class="svc-icon"><svg viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4" r="2" stroke="white" stroke-width="1.1"/><circle cx="2.5" cy="8.5" r="1.5" stroke="white" stroke-width="1.1"/><circle cx="9.5" cy="8.5" r="1.5" stroke="white" stroke-width="1.1"/><line x1="4.2" y1="5.5" x2="3.2" y2="7.2" stroke="white" stroke-width=".9"/><line x1="7.8" y1="5.5" x2="8.8" y2="7.2" stroke="white" stroke-width=".9"/></svg></div>
+            <div class="svc-name">קהילה ונטוורקינג</div>
+            <div class="svc-badge">Hub</div>
+          </div>
+          <div class="svc-desc">מפגשי יזמים, הרצאות, סדנאות ואירועי נטוורקינג קהילתיים</div>
+        </div>
+      </div>
+    </div>
+  </div>
+```
+
+- [ ] **Step 3: Verify in browser**
+Navigate to slides 2-4. Slide 2: large dark vision box. Slide 3: two columns Problem/Solution. Slide 4: 4 ecosystem cards + 6 service pills. Counter shows correct numbers.
+
+- [ ] **Step 4: Commit**
+```bash
+git add "marketplace hub/Marketplace_Hub_Presentation_v1.html"
+git commit -m "Add general slides 2-4: vision, problem/solution, ecosystem+services"
+```
+
+---
+
+### Task 4: Economic model slides (6, 7, 8, 9)
+
+**Files:**
+- Modify: `Marketplace_Hub_Presentation_v1.html` — add CSS + 4 slides
+
+- [ ] **Step 1: Add economic model CSS inside `<style>` before `</style>`**
+
+```css
+/* ── Economic model card ── */
+.mc { background:var(--card); border:1px solid var(--border); border-radius:11px; overflow:hidden; flex:1; display:flex; flex-direction:column; }
+.mc-band { background:var(--burg-deep); padding:12px 22px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.mc-badge { width:28px; height:28px; background:var(--rose); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:900; color:white; flex-shrink:0; }
+.mc-name { font-size:.95rem; font-weight:900; color:white; }
+.mc-body { flex:1; padding:16px 22px; display:flex; flex-direction:column; gap:14px; }
+.flow-track { display:flex; align-items:flex-start; position:relative; }
+.flow-track::before { content:''; position:absolute; top:12px; right:12px; left:12px; height:1px; background:var(--border); }
+.flow-step { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; z-index:1; }
+.flow-n { width:24px; height:24px; background:var(--card); border:1.5px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.56rem; font-weight:900; color:var(--burg); }
+.flow-t { font-size:.62rem; color:var(--mid); text-align:center; line-height:1.38; }
+.mc-visual { flex-shrink:0; background:var(--bg); border-radius:8px; overflow:hidden; }
+.mc-visual svg { display:block; }
+.mc-bottom { display:flex; gap:18px; align-items:flex-start; }
+.mc-ex { flex:1; background:var(--cream); border-radius:8px; padding:12px 14px; }
+.ex-lbl { font-size:.46rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--rose); margin-bottom:4px; }
+.ex-txt { font-size:.66rem; color:var(--mid); line-height:1.48; }
+.mc-pros { display:flex; flex-direction:column; gap:6px; align-self:center; }
+.mc-pro { border:1px solid var(--border); border-right:2px solid var(--burg); border-radius:6px; padding:5px 14px; font-size:.58rem; font-weight:600; color:var(--mid); white-space:nowrap; }
+```
+
+- [ ] **Step 2: Add 4 model slides in place of `<!-- content slides 6–9 go here -->`**
+
+```html
+  <!-- ── SLIDE 6: Model 1 — Referral ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — מודל כלכלי</div>
+        <div class="hs">ארבעה מודלי הכנסה משלימים לצמיחה בת-קיימא</div>
+      </div>
+      <div class="hp">מודל כלכלי</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">מודל 1 מתוך 4</div>
+      <div class="mc">
+        <div class="mc-band">
+          <div class="mc-badge">1</div>
+          <div class="mc-name">עמלת הפנייה (Referral Commission)</div>
+        </div>
+        <div class="mc-body">
+          <div class="flow-track">
+            <div class="flow-step"><div class="flow-n">1</div><div class="flow-t">מותג מחפש<br>שירות</div></div>
+            <div class="flow-step"><div class="flow-n">2</div><div class="flow-t">Hub מחברת<br>לשותף</div></div>
+            <div class="flow-step"><div class="flow-n">3</div><div class="flow-t">שותף נותן<br>שירות</div></div>
+            <div class="flow-step"><div class="flow-n">4</div><div class="flow-t">Hub מקבלת<br>עמלה</div></div>
+          </div>
+          <div class="mc-visual"><svg width="100%" height="58" viewBox="0 0 420 58" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="46" cy="29" r="20" fill="#F5EDE8" stroke="#E0CCC4" stroke-width="1.3"/>
+            <circle cx="46" cy="24" r="5" fill="#4A253A" opacity=".5"/>
+            <rect x="38" y="30" width="16" height="9" rx="2.5" fill="#4A253A" opacity=".38"/>
+            <line x1="67" y1="29" x2="106" y2="29" stroke="#C2305A" stroke-width="1.4" stroke-dasharray="3,2"/>
+            <path d="M104 25 L113 29 L104 33 Z" fill="#C2305A"/>
+            <circle cx="133" cy="29" r="23" fill="#8B1C3C"/>
+            <text x="133" y="33" text-anchor="middle" font-size="9.5" fill="white" font-family="Rubik,sans-serif" font-weight="900">Hub</text>
+            <line x1="157" y1="29" x2="194" y2="29" stroke="#C2305A" stroke-width="1.4" stroke-dasharray="3,2"/>
+            <path d="M192 25 L201 29 L192 33 Z" fill="#C2305A"/>
+            <circle cx="221" cy="29" r="20" fill="#F5EDE8" stroke="#E0CCC4" stroke-width="1.3"/>
+            <circle cx="221" cy="24" r="5" fill="#4A253A" opacity=".5"/>
+            <rect x="213" y="30" width="16" height="9" rx="2.5" fill="#4A253A" opacity=".38"/>
+            <path d="M241 23 C265 6,304 6,327 23" fill="none" stroke="#C2305A" stroke-width="1.4" stroke-dasharray="3,2"/>
+            <path d="M325 19 L334 24 L324 27 Z" fill="#C2305A"/>
+            <circle cx="355" cy="29" r="21" fill="white" stroke="#C2305A" stroke-width="1.5"/>
+            <text x="355" y="25" text-anchor="middle" font-size="7.5" fill="#8B1C3C" font-family="Rubik,sans-serif" font-weight="700">Fee</text>
+            <text x="355" y="39" text-anchor="middle" font-size="15" fill="#C2305A" font-family="Rubik,sans-serif" font-weight="900">&#8362;</text>
+            <path d="M334 33 C306 46,185 48,156 37" fill="none" stroke="#8B1C3C" stroke-width="1" stroke-dasharray="2,3" opacity=".35"/>
+          </svg></div>
+          <div class="mc-bottom">
+            <div class="mc-ex">
+              <div class="ex-lbl">דוגמה</div>
+              <div class="ex-txt">מותג מחפש רו״ח ← Hub מחברת ← לקוח משלם לרו״ח ← Hub מקבלת עמלה מהעסקה</div>
+            </div>
+            <div class="mc-pros">
+              <div class="mc-pro">ללא עלויות תפעול</div>
+              <div class="mc-pro">Scalable בקלות</div>
+              <div class="mc-pro">התחלה מהירה</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 7: Model 2 — Package ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — מודל כלכלי</div>
+        <div class="hs">ארבעה מודלי הכנסה משלימים לצמיחה בת-קיימא</div>
+      </div>
+      <div class="hp">מודל כלכלי</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">מודל 2 מתוך 4</div>
+      <div class="mc">
+        <div class="mc-band">
+          <div class="mc-badge">2</div>
+          <div class="mc-name">חבילת שירות (Hub Package)</div>
+        </div>
+        <div class="mc-body">
+          <div class="flow-track">
+            <div class="flow-step"><div class="flow-n">1</div><div class="flow-t">לקוח משלם<br>ל-Hub</div></div>
+            <div class="flow-step"><div class="flow-n">2</div><div class="flow-t">Hub בונה<br>חבילה</div></div>
+            <div class="flow-step"><div class="flow-n">3</div><div class="flow-t">שותפים<br>מבצעים</div></div>
+            <div class="flow-step"><div class="flow-n">4</div><div class="flow-t">Hub שומרת<br>Margin</div></div>
+          </div>
+          <div class="mc-visual"><svg width="100%" height="58" viewBox="0 0 420 58" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="12" width="68" height="14" rx="4" fill="#F5EDE8" stroke="#E0CCC4" stroke-width="1"/>
+            <text x="42" y="22.5" text-anchor="middle" font-size="8" fill="#4A253A" font-family="Rubik,sans-serif">Marketing</text>
+            <rect x="8" y="32" width="68" height="14" rx="4" fill="#F5EDE8" stroke="#E0CCC4" stroke-width="1"/>
+            <text x="42" y="42.5" text-anchor="middle" font-size="8" fill="#4A253A" font-family="Rubik,sans-serif">Finance</text>
+            <line x1="77" y1="19" x2="115" y2="26" stroke="#C2305A" stroke-width="1.2" stroke-dasharray="3,2"/>
+            <line x1="77" y1="39" x2="115" y2="32" stroke="#C2305A" stroke-width="1.2" stroke-dasharray="3,2"/>
+            <rect x="117" y="9" width="122" height="40" rx="6" fill="white" stroke="#8B1C3C" stroke-width="1.5"/>
+            <path d="M117 22 L178 17 L239 22" fill="none" stroke="#8B1C3C" stroke-width="1.3"/>
+            <line x1="132" y1="31" x2="224" y2="31" stroke="#E0CCC4" stroke-width="1.1"/>
+            <line x1="132" y1="37" x2="214" y2="37" stroke="#E0CCC4" stroke-width="1.1"/>
+            <line x1="132" y1="43" x2="220" y2="43" stroke="#E0CCC4" stroke-width="1.1"/>
+            <text x="178" y="27" text-anchor="middle" font-size="7.5" fill="#8B1C3C" font-family="Rubik,sans-serif" font-weight="700">Hub Package</text>
+            <line x1="240" y1="29" x2="278" y2="29" stroke="#C2305A" stroke-width="1.4" stroke-dasharray="3,2"/>
+            <path d="M276 25 L285 29 L276 33 Z" fill="#C2305A"/>
+            <rect x="287" y="17" width="96" height="24" rx="6" fill="#8B1C3C"/>
+            <text x="335" y="32" text-anchor="middle" font-size="9.5" fill="white" font-family="Rubik,sans-serif" font-weight="700">Margin &#10003;</text>
+          </svg></div>
+          <div class="mc-bottom">
+            <div class="mc-ex">
+              <div class="ex-lbl">דוגמה</div>
+              <div class="ex-txt">חבילת התחלה (Starter) — רו״ח, צילום, מיתוג, ייעוץ. Hub מנהלת את כל השירות תחת מעטפת אחת</div>
+            </div>
+            <div class="mc-pros">
+              <div class="mc-pro">שליטה בחוויה</div>
+              <div class="mc-pro">בניית מותג חזק</div>
+              <div class="mc-pro">Margins גבוהים</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 8: Model 3 — Revenue Share ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — מודל כלכלי</div>
+        <div class="hs">ארבעה מודלי הכנסה משלימים לצמיחה בת-קיימא</div>
+      </div>
+      <div class="hp">מודל כלכלי</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">מודל 3 מתוך 4</div>
+      <div class="mc">
+        <div class="mc-band">
+          <div class="mc-badge">3</div>
+          <div class="mc-name">שיתוף הכנסות (Revenue Share)</div>
+        </div>
+        <div class="mc-body">
+          <div class="flow-track">
+            <div class="flow-step"><div class="flow-n">1</div><div class="flow-t">שירות<br>מתמשך</div></div>
+            <div class="flow-step"><div class="flow-n">2</div><div class="flow-t">תשלום<br>חודשי</div></div>
+            <div class="flow-step"><div class="flow-n">3</div><div class="flow-t">Hub גוזרת<br>אחוז</div></div>
+            <div class="flow-step"><div class="flow-n">4</div><div class="flow-t">הכנסה חוזרת<br>(Recurring)</div></div>
+          </div>
+          <div class="mc-visual"><svg width="100%" height="58" viewBox="0 0 420 58" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="56" cy="29" r="21" fill="#F5EDE8" stroke="#E0CCC4" stroke-width="1.3"/>
+            <text x="56" y="26" text-anchor="middle" font-size="7.5" fill="#8B1C3C" font-family="Rubik,sans-serif" font-weight="600">Monthly</text>
+            <text x="56" y="38" text-anchor="middle" font-size="14" fill="#C2305A" font-family="Rubik,sans-serif" font-weight="900">&#8362;</text>
+            <path d="M115 22 C152 5,264 5,301 22" fill="none" stroke="#C2305A" stroke-width="2" stroke-dasharray="5,3"/>
+            <path d="M299 18 L308 23 L298 26 Z" fill="#C2305A"/>
+            <path d="M301 36 C264 53,152 53,115 36" fill="none" stroke="#8B1C3C" stroke-width="2" stroke-dasharray="5,3"/>
+            <path d="M117 40 L108 35 L118 32 Z" fill="#8B1C3C"/>
+            <circle cx="208" cy="29" r="24" fill="white" stroke="#E0CCC4" stroke-width="1.5"/>
+            <text x="208" y="37" text-anchor="middle" font-size="22" fill="#8B1C3C" font-family="Rubik,sans-serif" font-weight="900">%</text>
+            <circle cx="368" cy="29" r="21" fill="#8B1C3C"/>
+            <text x="368" y="26" text-anchor="middle" font-size="7" fill="white" font-family="Rubik,sans-serif" font-weight="700">Recurring</text>
+            <text x="368" y="36" text-anchor="middle" font-size="7" fill="rgba(245,237,232,0.75)" font-family="Rubik,sans-serif">Revenue</text>
+          </svg></div>
+          <div class="mc-bottom">
+            <div class="mc-ex">
+              <div class="ex-lbl">דוגמה</div>
+              <div class="ex-txt">הנה״ח, שיווק, ecommerce — Hub מקבלת אחוז קבוע מכל תשלום חודשי לאורך זמן</div>
+            </div>
+            <div class="mc-pros">
+              <div class="mc-pro">הכנסה חוזרת (Recurring)</div>
+              <div class="mc-pro">הכנסה יציבה</div>
+              <div class="mc-pro">קשרים ארוכי-טווח</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 9: Model 4 — Success Fee ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — מודל כלכלי</div>
+        <div class="hs">ארבעה מודלי הכנסה משלימים לצמיחה בת-קיימא</div>
+      </div>
+      <div class="hp">מודל כלכלי</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">מודל 4 מתוך 4</div>
+      <div class="mc">
+        <div class="mc-band">
+          <div class="mc-badge">4</div>
+          <div class="mc-name">עמלת הצלחה (Success Fee)</div>
+        </div>
+        <div class="mc-body">
+          <div class="flow-track">
+            <div class="flow-step"><div class="flow-n">1</div><div class="flow-t">Hub יוצרת<br>הזדמנות</div></div>
+            <div class="flow-step"><div class="flow-n">2</div><div class="flow-t">מותג<br>נכנס</div></div>
+            <div class="flow-step"><div class="flow-n">3</div><div class="flow-t">מכירות<br>או עסקה</div></div>
+            <div class="flow-step"><div class="flow-n">4</div><div class="flow-t">Hub גובה<br>עמלה (Fee)</div></div>
+          </div>
+          <div class="mc-visual"><svg width="100%" height="58" viewBox="0 0 420 58" xmlns="http://www.w3.org/2000/svg">
+            <line x1="75" y1="10" x2="75" y2="48" stroke="#E0CCC4" stroke-width="1"/>
+            <line x1="75" y1="48" x2="300" y2="48" stroke="#E0CCC4" stroke-width="1"/>
+            <rect x="84" y="40" width="28" height="8" rx="2" fill="#E0CCC4"/>
+            <rect x="124" y="33" width="28" height="15" rx="2" fill="#C2305A" opacity=".45"/>
+            <rect x="164" y="24" width="28" height="24" rx="2" fill="#C2305A" opacity=".68"/>
+            <rect x="204" y="14" width="28" height="34" rx="2" fill="#8B1C3C"/>
+            <text x="218" y="13" text-anchor="middle" font-size="10" fill="#C2305A">&#9733;</text>
+            <path d="M98 38 L138 31 L178 22 L218 12" fill="none" stroke="#C2305A" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <line x1="246" y1="29" x2="290" y2="29" stroke="#C2305A" stroke-width="1.4" stroke-dasharray="3,2"/>
+            <path d="M288 25 L297 29 L288 33 Z" fill="#C2305A"/>
+            <circle cx="328" cy="29" r="23" fill="white" stroke="#C2305A" stroke-width="1.5"/>
+            <text x="328" y="24" text-anchor="middle" font-size="7.5" fill="#8B1C3C" font-family="Rubik,sans-serif" font-weight="700">Success</text>
+            <text x="328" y="36" text-anchor="middle" font-size="10" fill="#C2305A" font-family="Rubik,sans-serif" font-weight="900">Fee &#8593;</text>
+          </svg></div>
+          <div class="mc-bottom">
+            <div class="mc-ex">
+              <div class="ex-lbl">דוגמה</div>
+              <div class="ex-txt">פופ-אפ בקניון, כניסה לחנות, שיתוף פעולה מסחרי — עמלה (Fee) קבועה או אחוז מהמכירות</div>
+            </div>
+            <div class="mc-pros">
+              <div class="mc-pro">הלימה מלאה (Alignment)</div>
+              <div class="mc-pro">ערך אמיתי</div>
+              <div class="mc-pro">רווח מהצלחה</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+```
+
+- [ ] **Step 3: Verify in browser**
+Slides 6-9: each shows a single large model card with header, 4-step flow track, SVG diagram, example box, and benefit pills. Counter shows correct numbers.
+
+- [ ] **Step 4: Commit**
+```bash
+git add "marketplace hub/Marketplace_Hub_Presentation_v1.html"
+git commit -m "Add economic model slides 6-9 with SVG illustrations"
+```
+
+---
+
+### Task 5: Action plan slides (11, 12, 13)
+
+**Files:**
+- Modify: `Marketplace_Hub_Presentation_v1.html` — add CSS + 3 slides
+
+- [ ] **Step 1: Add action plan CSS inside `<style>` before `</style>`**
+
+```css
+/* ── Action plan stage cards ── */
+.stage-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; flex:1; }
+.sc { background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
+.sc-band { background:var(--burg-deep); padding:10px 15px 11px; flex-shrink:0; }
+.sc-band-top { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+.sc-num { width:22px; height:22px; background:var(--rose); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.56rem; font-weight:900; color:white; flex-shrink:0; }
+.sc-title { font-size:.76rem; font-weight:900; color:white; line-height:1.2; flex:1; }
+.sc-band-icon { width:26px; height:26px; background:rgba(255,255,255,.12); border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.sc-goal { font-size:.63rem; color:rgba(245,237,232,.72); line-height:1.36; }
+.sc-body { flex:1; padding:10px 15px; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+.sc-lbl { font-size:.44rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--rose); margin-bottom:3px; }
+.sc-items { display:flex; flex-direction:column; gap:3px; }
+.sc-item { display:flex; gap:6px; font-size:.63rem; color:var(--mid); line-height:1.36; align-items:flex-start; }
+.sc-dot { width:4px; height:4px; background:var(--rose); border-radius:50%; flex-shrink:0; margin-top:5px; }
+.sc-div { height:1px; background:var(--border); flex-shrink:0; }
+.sc-bot { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.sc-col { display:flex; flex-direction:column; gap:3px; }
+.sc-vis { flex:1; display:flex; align-items:center; justify-content:center; min-height:30px; }
+.sc-vis-ring { width:48px; height:48px; border-radius:50%; background:var(--cream); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; }
+.sc-vis-inner { width:28px; height:28px; background:var(--burg); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+```
+
+- [ ] **Step 2: Add 3 action plan slides in place of `<!-- content slides 11–13 go here -->`**
+
+```html
+  <!-- ── SLIDE 11: Stages 1–2 ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — תוכנית פעולה</div>
+        <div class="hs">6 שלבים מ-Validation ועד Scale</div>
+      </div>
+      <div class="hp">תוכנית פעולה</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">שלבים 1–2</div>
+      <div class="stage-grid">
+
+        <div class="sc">
+          <div class="sc-band">
+            <div class="sc-band-top">
+              <div class="sc-num">1</div>
+              <div class="sc-title">Market Discovery &amp; Validation</div>
+              <div class="sc-band-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5.5" cy="5.5" r="3.5" stroke="white" stroke-width="1.4"/><line x1="8.2" y1="8.2" x2="12" y2="12" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+            </div>
+            <div class="sc-goal">להבין מהו הכאב האמיתי של עסקים ומהי נקודת הכניסה הראשונה</div>
+          </div>
+          <div class="sc-body">
+            <div>
+              <div class="sc-lbl">פעולות מרכזיות</div>
+              <div class="sc-items">
+                <div class="sc-item"><div class="sc-dot"></div>20–30 שיחות עומק עם עסקים</div>
+                <div class="sc-item"><div class="sc-dot"></div>מיפוי בעיות וזיהוי דפוסים חוזרים</div>
+                <div class="sc-item"><div class="sc-dot"></div>בניית Pain Map וזיהוי לקוח אידיאלי (ICP)</div>
+              </div>
+            </div>
+            <div class="sc-div"></div>
+            <div class="sc-bot">
+              <div class="sc-col">
+                <div class="sc-lbl">תוצרים</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Pain Map מפורטת</div>
+                  <div class="sc-item"><div class="sc-dot"></div>ICP ברור</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Validation ראשוני</div>
+                </div>
+              </div>
+              <div class="sc-col">
+                <div class="sc-lbl">מדדי הצלחה</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>בעיות חוזרות ברוב</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Willingness to Pay</div>
+                  <div class="sc-item"><div class="sc-dot"></div>כיוון לשירות ראשון</div>
+                </div>
+              </div>
+            </div>
+            <div class="sc-vis"><div class="sc-vis-ring"><div class="sc-vis-inner"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5.5" cy="5.5" r="3.5" stroke="white" stroke-width="1.4"/><line x1="8.2" y1="8.2" x2="12" y2="12" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg></div></div></div>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-band">
+            <div class="sc-band-top">
+              <div class="sc-num">2</div>
+              <div class="sc-title">Manual Solution / First Service</div>
+              <div class="sc-band-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="white" stroke-width="1.4"/><path d="M4.5 7 L6.2 8.7 L9.5 5.3" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="sc-goal">לפתור ידנית בעיה אחת בצורה מצוינת לפני בניית מערכת רחבה</div>
+          </div>
+          <div class="sc-body">
+            <div>
+              <div class="sc-lbl">פעולות מרכזיות</div>
+              <div class="sc-items">
+                <div class="sc-item"><div class="sc-dot"></div>עבודה עם 3–5 לקוחות ראשונים</div>
+                <div class="sc-item"><div class="sc-dot"></div>פתרון ידני וליווי אישי</div>
+                <div class="sc-item"><div class="sc-dot"></div>בדיקת תמחור וזיהוי bottlenecks</div>
+              </div>
+            </div>
+            <div class="sc-div"></div>
+            <div class="sc-bot">
+              <div class="sc-col">
+                <div class="sc-lbl">תוצרים</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>לקוחות ראשונים</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Case Studies</div>
+                  <div class="sc-item"><div class="sc-dot"></div>תהליך ראשוני</div>
+                </div>
+              </div>
+              <div class="sc-col">
+                <div class="sc-lbl">מדדי הצלחה</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>לקוחות משלמים</div>
+                  <div class="sc-item"><div class="sc-dot"></div>שביעות רצון גבוהה</div>
+                  <div class="sc-item"><div class="sc-dot"></div>תהליך שחוזר</div>
+                </div>
+              </div>
+            </div>
+            <div class="sc-vis"><div class="sc-vis-ring"><div class="sc-vis-inner"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="white" stroke-width="1.4"/><path d="M4.5 7 L6.2 8.7 L9.5 5.3" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 12: Stages 3–4 ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — תוכנית פעולה</div>
+        <div class="hs">6 שלבים מ-Validation ועד Scale</div>
+      </div>
+      <div class="hp">תוכנית פעולה</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">שלבים 3–4</div>
+      <div class="stage-grid">
+
+        <div class="sc">
+          <div class="sc-band">
+            <div class="sc-band-top">
+              <div class="sc-num">3</div>
+              <div class="sc-title">Focused Partner Network</div>
+              <div class="sc-band-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="3" r="1.8" stroke="white" stroke-width="1.2"/><circle cx="2.5" cy="11" r="1.8" stroke="white" stroke-width="1.2"/><circle cx="11.5" cy="11" r="1.8" stroke="white" stroke-width="1.2"/><line x1="7" y1="4.8" x2="3.8" y2="9.3" stroke="white" stroke-width="1.1"/><line x1="7" y1="4.8" x2="10.2" y2="9.3" stroke="white" stroke-width="1.1"/><line x1="4.3" y1="11" x2="9.7" y2="11" stroke="white" stroke-width="1.1"/></svg></div>
+            </div>
+            <div class="sc-goal">לבנות רשת שותפים ממוקדת סביב הבעיה שאומתה</div>
+          </div>
+          <div class="sc-body">
+            <div>
+              <div class="sc-lbl">פעולות מרכזיות</div>
+              <div class="sc-items">
+                <div class="sc-item"><div class="sc-dot"></div>גיוס שותפים רלוונטיים</div>
+                <div class="sc-item"><div class="sc-dot"></div>הגדרת workflow וסטנדרט עבודה</div>
+                <div class="sc-item"><div class="sc-dot"></div>הגדרת SLA ומודל תגמול</div>
+              </div>
+            </div>
+            <div class="sc-div"></div>
+            <div class="sc-bot">
+              <div class="sc-col">
+                <div class="sc-lbl">תוצרים</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Partner Network</div>
+                  <div class="sc-item"><div class="sc-dot"></div>סטנדרט עבודה</div>
+                  <div class="sc-item"><div class="sc-dot"></div>מודל תגמול מסודר</div>
+                </div>
+              </div>
+              <div class="sc-col">
+                <div class="sc-lbl">מדדי הצלחה</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Delivery איכותי</div>
+                  <div class="sc-item"><div class="sc-dot"></div>לקוחות מרוצים</div>
+                  <div class="sc-item"><div class="sc-dot"></div>אמון בין הצדדים</div>
+                </div>
+              </div>
+            </div>
+            <div class="sc-vis"><div class="sc-vis-ring"><div class="sc-vis-inner"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="3" r="1.8" stroke="white" stroke-width="1.2"/><circle cx="2.5" cy="11" r="1.8" stroke="white" stroke-width="1.2"/><circle cx="11.5" cy="11" r="1.8" stroke="white" stroke-width="1.2"/><line x1="7" y1="4.8" x2="3.8" y2="9.3" stroke="white" stroke-width="1.1"/><line x1="7" y1="4.8" x2="10.2" y2="9.3" stroke="white" stroke-width="1.1"/><line x1="4.3" y1="11" x2="9.7" y2="11" stroke="white" stroke-width="1.1"/></svg></div></div></div>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-band">
+            <div class="sc-band-top">
+              <div class="sc-num">4</div>
+              <div class="sc-title">Core Infrastructure</div>
+              <div class="sc-band-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.2" stroke="white" stroke-width="1.2"/><path d="M7 1.5 L7 3.5 M7 10.5 L7 12.5 M1.5 7 L3.5 7 M10.5 7 L12.5 7 M3.2 3.2 L4.6 4.6 M9.4 9.4 L10.8 10.8 M10.8 3.2 L9.4 4.6 M4.6 9.4 L3.2 10.8" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            </div>
+            <div class="sc-goal">להפוך את הפעילות למערכת יציבה וסקיילבילית</div>
+          </div>
+          <div class="sc-body">
+            <div>
+              <div class="sc-lbl">פעולות מרכזיות</div>
+              <div class="sc-items">
+                <div class="sc-item"><div class="sc-dot"></div>Brand Intake System ו-Onboarding</div>
+                <div class="sc-item"><div class="sc-dot"></div>הקמת CRM ומערכות מעקב</div>
+                <div class="sc-item"><div class="sc-dot"></div>כתיבת SOPs וניהול pipeline</div>
+              </div>
+            </div>
+            <div class="sc-div"></div>
+            <div class="sc-bot">
+              <div class="sc-col">
+                <div class="sc-lbl">תוצרים</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Onboarding Flow</div>
+                  <div class="sc-item"><div class="sc-dot"></div>CRM + SOPs פעילים</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Internal Workflows</div>
+                </div>
+              </div>
+              <div class="sc-col">
+                <div class="sc-lbl">מדדי הצלחה</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Workflow יציב</div>
+                  <div class="sc-item"><div class="sc-dot"></div>יותר לקוחות בניהול</div>
+                  <div class="sc-item"><div class="sc-dot"></div>פחות כאוס תפעולי</div>
+                </div>
+              </div>
+            </div>
+            <div class="sc-vis"><div class="sc-vis-ring"><div class="sc-vis-inner"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.2" stroke="white" stroke-width="1.2"/><path d="M7 1.5 L7 3.5 M7 10.5 L7 12.5 M1.5 7 L3.5 7 M10.5 7 L12.5 7 M3.2 3.2 L4.6 4.6 M9.4 9.4 L10.8 10.8 M10.8 3.2 L9.4 4.6 M4.6 9.4 L3.2 10.8" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg></div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 13: Stages 5–6 ── -->
+  <div class="slide">
+    <div class="top-bar"></div>
+    <div class="slide-header">
+      <div class="logo-badge"><img src="marketplace_logo.png" alt="Marketplace Hub"></div>
+      <div class="hd"></div>
+      <div class="hc">
+        <div class="ht"><em>Marketplace Hub</em> — תוכנית פעולה</div>
+        <div class="hs">6 שלבים מ-Validation ועד Scale</div>
+      </div>
+      <div class="hp">תוכנית פעולה</div>
+    </div>
+    <div class="slide-content">
+      <div class="sec-lbl">שלבים 5–6</div>
+      <div class="stage-grid">
+
+        <div class="sc">
+          <div class="sc-band">
+            <div class="sc-band-top">
+              <div class="sc-num">5</div>
+              <div class="sc-title">Community &amp; Ecosystem</div>
+              <div class="sc-band-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4.5" r="2.2" stroke="white" stroke-width="1.2"/><circle cx="9" cy="4.5" r="2.2" stroke="white" stroke-width="1.2"/><path d="M1.5 12.5 C1.5 9.8 3 8.5 5 8.5 C6 8.5 6.8 8.9 7 9.4" stroke="white" stroke-width="1.1" stroke-linecap="round"/><path d="M12.5 12.5 C12.5 9.8 11 8.5 9 8.5 C8 8.5 7.2 8.9 7 9.4" stroke="white" stroke-width="1.1" stroke-linecap="round"/></svg></div>
+            </div>
+            <div class="sc-goal">להפוך את Marketplace Hub לאקוסיסטם אמיתי</div>
+          </div>
+          <div class="sc-body">
+            <div>
+              <div class="sc-lbl">פעולות מרכזיות</div>
+              <div class="sc-items">
+                <div class="sc-item"><div class="sc-dot"></div>בניית קהילה ואירועי נטוורקינג</div>
+                <div class="sc-item"><div class="sc-dot"></div>הרצאות, סדנאות ושיתופי פעולה</div>
+                <div class="sc-item"><div class="sc-dot"></div>חיבורים בין עסקים והזדמנויות</div>
+              </div>
+            </div>
+            <div class="sc-div"></div>
+            <div class="sc-bot">
+              <div class="sc-col">
+                <div class="sc-lbl">תוצרים</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>קהילה פעילה</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Collaborations</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Referrals + Ecosystem</div>
+                </div>
+              </div>
+              <div class="sc-col">
+                <div class="sc-lbl">מדדי הצלחה</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Engagement גבוה</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Network Effects</div>
+                  <div class="sc-item"><div class="sc-dot"></div>לקוחות חוזרים</div>
+                </div>
+              </div>
+            </div>
+            <div class="sc-vis"><div class="sc-vis-ring"><div class="sc-vis-inner"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4.5" r="2.2" stroke="white" stroke-width="1.2"/><circle cx="9" cy="4.5" r="2.2" stroke="white" stroke-width="1.2"/><path d="M1.5 12.5 C1.5 9.8 3 8.5 5 8.5 C6 8.5 6.8 8.9 7 9.4" stroke="white" stroke-width="1.1" stroke-linecap="round"/><path d="M12.5 12.5 C12.5 9.8 11 8.5 9 8.5 C8 8.5 7.2 8.9 7 9.4" stroke="white" stroke-width="1.1" stroke-linecap="round"/></svg></div></div></div>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-band">
+            <div class="sc-band-top">
+              <div class="sc-num">6</div>
+              <div class="sc-title">Scale &amp; Expansion</div>
+              <div class="sc-band-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12 L7 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M4 6 L7 3 L10 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 9.5 L3.2 11.2" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity=".7"/><path d="M9.5 9.5 L10.8 11.2" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity=".7"/></svg></div>
+            </div>
+            <div class="sc-goal">להתרחב סקיילבילית לאחר השגת Product-Market Fit</div>
+          </div>
+          <div class="sc-body">
+            <div>
+              <div class="sc-lbl">פעולות מרכזיות</div>
+              <div class="sc-items">
+                <div class="sc-item"><div class="sc-dot"></div>הרחבת שירותים ו-Partner Network</div>
+                <div class="sc-item"><div class="sc-dot"></div>Automations, AI וגיוס (Hiring)</div>
+                <div class="sc-item"><div class="sc-dot"></div>הקמת פלטפורמת Marketplace המלאה</div>
+              </div>
+            </div>
+            <div class="sc-div"></div>
+            <div class="sc-bot">
+              <div class="sc-col">
+                <div class="sc-lbl">תוצרים</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Revenue יציב + צוות</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Scalable Workflows</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Marketplace מלא</div>
+                </div>
+              </div>
+              <div class="sc-col">
+                <div class="sc-lbl">מדדי הצלחה</div>
+                <div class="sc-items">
+                  <div class="sc-item"><div class="sc-dot"></div>Product-Market Fit</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Traction משמעותי</div>
+                  <div class="sc-item"><div class="sc-dot"></div>Growth יציב</div>
+                </div>
+              </div>
+            </div>
+            <div class="sc-vis"><div class="sc-vis-ring"><div class="sc-vis-inner"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12 L7 3" stroke="white" stroke-width="1.5" stroke-linecap="round"/><path d="M4 6 L7 3 L10 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 9.5 L3.2 11.2" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity=".7"/><path d="M9.5 9.5 L10.8 11.2" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity=".7"/></svg></div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+```
+
+- [ ] **Step 3: Verify in browser**
+Navigate all 13 slides with arrow keys. Counter reads "N / 13" correctly. Gate slides are dark with centered titles. Content slides have proper header + content. Action plan slides show 2 stage cards side by side with icons and cream visual at bottom.
+
+- [ ] **Step 4: Final commit**
+```bash
+git add "marketplace hub/Marketplace_Hub_Presentation_v1.html"
+git commit -m "Add action plan slides 11-13: complete 13-slide presentation"
+```
