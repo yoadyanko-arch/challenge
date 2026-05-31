@@ -23,7 +23,7 @@ body {
 /* ── Deck / Slide ── */
 .deck { position:relative; width:1280px; height:720px; box-shadow:0 12px 80px rgba(0,0,0,.28); }
 .slide {
-  position:absolute; inset:0; width:1280px; height:720px;
+  position:absolute; inset:0;
   display:none; flex-direction:column;
   background:var(--bg); overflow:hidden;
 }
@@ -94,7 +94,6 @@ body {
 .slide-counter {
   position:fixed; bottom:31px; left:50%; transform:translateX(-50%);
   font-size:.58rem; color:var(--muted); letter-spacing:.1em; z-index:200;
-  font-family:'Rubik',sans-serif;
 }
 </style>
 </head>
@@ -104,8 +103,8 @@ body {
   <!-- slides added in Tasks 2–5 -->
 </div>
 
-<button class="nav-btn prev" id="prevBtn">&#8249;</button>
-<button class="nav-btn next" id="nextBtn">&#8250;</button>
+<button class="nav-btn prev" id="prevBtn" aria-label="Previous slide">&#8249;</button>
+<button class="nav-btn next" id="nextBtn" aria-label="Next slide">&#8250;</button>
 <div class="slide-counter"><span id="curSlide">1</span> / <span id="totSlide">13</span></div>
 
 <script>
