@@ -27,9 +27,9 @@ export default function DiaryPage() {
       .select('*')
       .eq('id', id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         setPageLoading(false)
-        if (!data) return
+        if (error || !data) return
         setSession(data as LearnedSession)
         if (data.ai_summary) {
           setSummary(data.ai_summary)
@@ -38,6 +38,7 @@ export default function DiaryPage() {
           fetch(`/api/sessions/${id}/summary`, { method: 'POST' })
             .then(r => r.json())
             .then(({ summary: s }) => { if (s) setSummary(s) })
+            .catch(() => {})
             .finally(() => setSummaryLoading(false))
         }
       })
@@ -112,7 +113,7 @@ export default function DiaryPage() {
           מה למדתי ({session.cards_data.length} כרטיסים)
         </h2>
         {session.cards_data.map((result: StoredCardResult, i: number) => (
-          <div key={i} className="bg-card border border-border rounded-xl p-4 space-y-2">
+          <div key={result.card_id ?? i} className="bg-card border border-border rounded-xl p-4 space-y-2">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 shrink-0">
                 {result.was_correct === true ? (
