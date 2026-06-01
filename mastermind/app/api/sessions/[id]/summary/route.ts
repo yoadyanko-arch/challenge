@@ -55,10 +55,15 @@ ${cardsList}
   const aiSummary =
     message.content[0].type === 'text' ? message.content[0].text.trim() : ''
 
+  if (!aiSummary) {
+    return NextResponse.json({ error: 'AI generation failed' }, { status: 500 })
+  }
+
   await service
     .from('learned_sessions')
     .update({ ai_summary: aiSummary })
     .eq('id', id)
+    .eq('user_id', user.id)
 
   return NextResponse.json({ summary: aiSummary })
 }
