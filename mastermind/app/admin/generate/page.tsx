@@ -24,18 +24,23 @@ export default function GeneratePage() {
   async function generate() {
     setLoading(true)
     setResult('')
-    const res = await fetch('/api/cards/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pillar, type, topic: topic || undefined }),
-    })
-    const data = await res.json()
-    setResult(
-      data.created
-        ? `נוצרו ${data.created} כרטיסים (רמות 1–10).`
-        : data.error
-    )
-    setLoading(false)
+    try {
+      const res = await fetch('/api/cards/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pillar, type, topic: topic || undefined }),
+      })
+      const data = await res.json()
+      setResult(
+        data.created
+          ? `נוצרו ${data.created} כרטיסים (רמות 1–10).`
+          : data.error
+      )
+    } catch {
+      setResult('שגיאת רשת, נסה שוב')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const selectCls =

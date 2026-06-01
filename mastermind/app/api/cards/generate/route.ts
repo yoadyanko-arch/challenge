@@ -19,6 +19,10 @@ export async function POST(req: NextRequest) {
     topic?: string
   }
 
+  if (!pillar || !type) {
+    return NextResponse.json({ error: 'pillar and type are required' }, { status: 400 })
+  }
+
   const generated = await generateBatch(pillar, type, LEVELS, topic)
 
   const cards = generated.map(({ card, level }) => {
