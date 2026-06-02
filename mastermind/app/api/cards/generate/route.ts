@@ -23,7 +23,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'pillar and type are required' }, { status: 400 })
   }
 
-  const generated = await generateBatch(pillar, type, LEVELS, topic)
+  let generated: Awaited<ReturnType<typeof generateBatch>>
+  let debugError: string | undefined
+  try {
+    generated = await generateBatch(pillar, type, LEVELS, topic)
+  } catch (err) {
+    debugError = String(err)
+    generated = []
+  }
 
   const cards = generated.map(({ card, level }) => {
     const difficulty: Difficulty =
@@ -47,7 +54,7 @@ export async function POST(req: NextRequest) {
   })
 
   if (cards.length === 0) {
-    return NextResponse.json({ error: 'כל הבקשות נכשלו, נסה שוב' }, { status: 500 })
+    return NextResponse.json({ error: debugError ?? 'כל הבקשות נכשלו, נסה שוב' }, { status: 500 })
   }
 
   const service = createServiceClient()
