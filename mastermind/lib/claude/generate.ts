@@ -51,6 +51,9 @@ export async function generateBatch(
       generateCard(pillar, type, level, topic).then(card => ({ card, level }))
     )
   )
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') console.error(`generateBatch level=${levels[i]} failed:`, r.reason)
+  })
   return results
     .filter(
       (r): r is PromiseFulfilledResult<{ card: GeneratedCard; level: number }> =>
