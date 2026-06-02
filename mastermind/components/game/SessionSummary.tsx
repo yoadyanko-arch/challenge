@@ -17,6 +17,7 @@ export default function SessionSummary({ results, score, pillar, topic, onDone }
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
 
   const correctCount = results.filter(r => r.was_correct === true).length
@@ -36,9 +37,12 @@ export default function SessionSummary({ results, score, pillar, topic, onDone }
           cards_data: results,
         }),
       })
+      if (!res.ok) throw new Error('save failed')
       const data = await res.json()
       if (data.id) setSessionId(data.id)
       setSaved(true)
+    } catch {
+      setSaveError(true)
     } finally {
       setSaving(false)
     }
@@ -114,6 +118,11 @@ export default function SessionSummary({ results, score, pillar, topic, onDone }
       </div>
 
       <div className="space-y-3 pt-2">
+        {saveError && (
+          <p className="text-center text-sm text-destructive font-medium py-1">
+            שגיאה בשמירה, נסה שוב
+          </p>
+        )}
         {!saved ? (
           <Button className="w-full" onClick={handleSave} disabled={saving}>
             {saving ? 'שומר...' : 'שמור בפרופיל'}
