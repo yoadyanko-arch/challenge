@@ -33,15 +33,25 @@ export default function SeedPage() {
 
   async function seedPillar(pillar: Pillar): Promise<boolean> {
     setStatus(prev => ({ ...prev, [pillar]: 'loading' }))
+    const topics = PILLAR_TOPICS[pillar]
+    let totalCreated = 0
+    let totalFailed = 0
     try {
-      const res = await fetch('/api/admin/seed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pillar }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      setResults(prev => ({ ...prev, [pillar]: { created: data.created, failed: data.failed } }))
+      for (const topic of topics) {
+        const res = await fetch('/api/admin/seed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pillar, topic: topic.value }),
+        })
+        const data = await res.json()
+        if (!data.error) {
+          totalCreated += data.created ?? 0
+          totalFailed += data.failed ?? 0
+        } else {
+          totalFailed += 10
+        }
+        setResults(prev => ({ ...prev, [pillar]: { created: totalCreated, failed: totalFailed } }))
+      }
       setStatus(prev => ({ ...prev, [pillar]: 'done' }))
       return true
     } catch {
