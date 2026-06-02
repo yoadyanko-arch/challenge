@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
     }
   })
 
+  if (cards.length === 0) {
+    return NextResponse.json({ error: 'כל הבקשות נכשלו, נסה שוב' }, { status: 500 })
+  }
+
   const service = createServiceClient()
   const { data, error } = await service.from('cards').insert(cards).select()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

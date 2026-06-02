@@ -46,14 +46,17 @@ ${cardsList}
 
 כתוב 2-3 משפטים בעברית שמסכמים מה המשתמש למד היום, כאילו אתה כותב בשמו ביומן אישי. היה חם וספציפי לתכנים שלמד.`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 300,
-    messages: [{ role: 'user', content: prompt }],
-  })
-
-  const aiSummary =
-    message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+  let aiSummary: string
+  try {
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 300,
+      messages: [{ role: 'user', content: prompt }],
+    })
+    aiSummary = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+  } catch {
+    return NextResponse.json({ error: 'AI generation failed' }, { status: 500 })
+  }
 
   if (!aiSummary) {
     return NextResponse.json({ error: 'AI generation failed' }, { status: 500 })
