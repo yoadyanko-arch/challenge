@@ -399,6 +399,13 @@ export default function AdminCardsTree({ initialCards }: { initialCards: Card[] 
                     onUpdate={handleUpdate}
                   />
                 ))}
+                <TopicSection
+                  topicValue="__unknown__"
+                  topicLabel="כללי"
+                  cards={grouped[pillar]['__unknown__'] ?? []}
+                  onDelete={handleDelete}
+                  onUpdate={handleUpdate}
+                />
               </div>
             )}
           </div>
