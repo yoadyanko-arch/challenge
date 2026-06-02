@@ -53,7 +53,8 @@ async function generateOne(
       return 'fail'
     }
     return 'ok'
-  } catch {
+  } catch (err) {
+    console.error(`generateOne failed pillar=${pillar} topic=${topic} level=${level}:`, err)
     if (attempt < 2) { await delay(3000); return generateOne(service, pillar, topic, level, 2) }
     return 'fail'
   }
