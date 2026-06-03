@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
   })
 
   if (cards.length === 0) {
-    return NextResponse.json({ error: debugError ?? 'כל הבקשות נכשלו, נסה שוב' }, { status: 500 })
+    const lastErr = (globalThis as Record<string, unknown>).__lastGenerateError as string | undefined
+    return NextResponse.json({ error: debugError ?? lastErr ?? 'כל הבקשות נכשלו, נסה שוב' }, { status: 500 })
   }
 
   const service = createServiceClient()
