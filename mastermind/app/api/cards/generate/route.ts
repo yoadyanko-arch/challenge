@@ -23,13 +23,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'pillar and type are required' }, { status: 400 })
   }
 
-  let generated: Awaited<ReturnType<typeof generateBatch>>
+  // Debug: test one card first to surface real error
   let debugError: string | undefined
+  try {
+    const { generateCard } = await import('@/lib/claude/generate')
+    await generateCard(pillar, type, 5, topic)
+  } catch (err) {
+    debugError = String(err)
+  }
+  if (debugError) {
+    return NextResponse.json({ error: debugError }, { status: 500 })
+  }
+
+  let generated: Awaited<ReturnType<typeof generateBatch>>
   try {
     generated = await generateBatch(pillar, type, LEVELS, topic)
   } catch (err) {
-    debugError = String(err)
-    generated = []
+    return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 
   const cards = generated.map(({ card, level }) => {
